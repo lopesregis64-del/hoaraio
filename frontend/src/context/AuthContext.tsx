@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 interface AuthContextType {
   token: string | null;
   usuarioTipo: string | null;
@@ -19,7 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
     const savedTipo = localStorage.getItem('usuario_tipo');
-    
+
     if (savedToken && savedTipo) {
       setToken(savedToken);
       setUsuarioTipo(savedTipo);

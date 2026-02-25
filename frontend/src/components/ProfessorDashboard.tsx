@@ -124,10 +124,6 @@ export function ProfessorDashboard() {
     }
   };
 
-  const handleError = (msg: string) => {
-    setError(msg);
-    setTimeout(() => setError(''), 5000);
-  };
 
   // Verificação de autenticação
   useEffect(() => {
