@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import '../styles/Login.css';
 
 interface LoginProps {
-  onLoginSuccess: (token: string, tipo: string) => void;
+  onLoginSuccess?: (token: string, tipo: string) => void;
 }
 
 export function Login({ onLoginSuccess }: LoginProps) {
@@ -15,6 +16,7 @@ export function Login({ onLoginSuccess }: LoginProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   // API Base URL for both local dev and Render deploy
   const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001';
@@ -39,11 +41,16 @@ export function Login({ onLoginSuccess }: LoginProps) {
       }
 
       const data = await response.json();
-      localStorage.setItem('token', data.access_token);
-      localStorage.setItem('usuario_tipo', data.usuario_tipo);
+
+      // Atualiza o contexto global de autenticação (isso já salva no localStorage)
+      login(data.access_token, data.usuario_tipo);
+
+      // Armazena o ID do usuário (opcional se não estiver no context)
       localStorage.setItem('usuario_id', data.usuario_id.toString());
 
-      onLoginSuccess(data.access_token, data.usuario_tipo);
+      if (onLoginSuccess) {
+        onLoginSuccess(data.access_token, data.usuario_tipo);
+      }
 
       // Redirecionar baseado no tipo
       if (data.usuario_tipo === 'admin') {
