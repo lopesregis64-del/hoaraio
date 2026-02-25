@@ -24,9 +24,11 @@ origins = [
 # Adiciona origin do Render se estiver configurada
 cors_origins_env = os.getenv("CORS_ORIGINS")
 if cors_origins_env:
-    # Suporta múltiplos origens separados por vírgula
-    extra_origins = [o.strip() for o in cors_origins_env.split(",")]
+    # Suporta múltiplos origens separados por vírgula e remove barras no final para evitar erro de match
+    extra_origins = [o.strip().rstrip("/") for o in cors_origins_env.split(",") if o.strip()]
     origins.extend(extra_origins)
+
+print(f"CORS Origins configuradas: {origins}")
 
 app.add_middleware(
     CORSMiddleware,
