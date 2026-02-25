@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Horário (Estrutura tipo planilha)</title>
+  <style>
+    :root{
+      --border: #222;
+      --grid-border: 1px solid var(--border);
+      --header-bg: #f2f2f2;
+      --interval-bg: #d32f2f;
+      --interval-fg: #fff;
+      --font: 12px/1.1 Arial, Helvetica, sans-serif;
+    }
+
+    body{ margin:16px; font: var(--font); color:#111; }
+    .wrap{ max-width: 1200px; margin: 0 auto; }
+
+    .title{
+      text-align:center;
+      font-weight:700;
+      font-size: 16px;
+      margin-bottom: 8px;
+      letter-spacing: .5px;
+    }
+
+    .toolbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .toolbar label{ font-weight:700; }
+    .toolbar select{
+      padding: 6px 8px;
+      border: 1px solid #888;
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .table-scroll{
+      overflow:auto;
+      border: var(--grid-border);
+    }
+
+    table{
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 980px;
+      table-layout: fixed;
+    }
+
+    thead th{
+      background: var(--header-bg);
+      border: var(--grid-border);
+      padding: 6px 4px;
+      text-align:center;
+      font-weight:700;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    tbody td{
+      border: var(--grid-border);
+      padding: 0;
+      text-align:center;
+      vertical-align: middle;
+      height: 34px;
+    }
+
+    /* Coluna do DIA (letras empilhadas) */
+    .day-cell{
+      width: 34px;
+      font-weight:700;
+      background:#fff;
+    }
+    .day-stack{
+      display:flex;
+      flex-direction: column;
+      align-items:center;
+      justify-content:center;
+      height: 100%;
+      gap: 1px;
+      letter-spacing: .5px;
+    }
+
+    /* Coluna de HORÁRIO */
+    .time-cell{
+      width: 92px;
+      font-weight:700;
+      background:#fff;
+    }
+
+    /* Células de aula */
+    .slot{
+      padding: 2px 3px;
+      height: 100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      text-transform: uppercase;
+      word-break: break-word;
+    }
+
+    /* Linha de INTERVALO */
+    tr.interval-row td{
+      background: var(--interval-bg);
+      color: var(--interval-fg);
+      height: 10px;
+      padding: 0;
+      font-weight:700;
+    }
+    tr.interval-row td .interval-label{
+      font-size: 11px;
+      letter-spacing: .5px;
+    }
+
+    /* Colunas “fixas” (dia + hora) também grudam ao scroll horizontal */
+    .sticky-left{
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background:#fff;
+    }
+    .sticky-left-2{
+      position: sticky;
+      left: 34px; /* largura da coluna dia */
+      z-index: 1;
+      background:#fff;
+    }
+    thead .sticky-left{ z-index: 3; background: var(--header-bg); }
+    thead .sticky-left-2{ z-index: 3; background: var(--header-bg); }
+
+    /* Para diferenciar visualmente a borda do bloco de cada dia (opcional) */
+    tr.day-start td{ border-top-width: 2px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title" id="title">HORÁRIO MATUTINO</div>
+
+    <div class="toolbar">
+      <label for="turno">Turno</label>
+      <select id="turno">
+        <option value="matutino">Matutino</option>
+        <option value="vespertino">Vespertino</option>
+      </select>
+    </div>
+
+    <div class="table-scroll">
+      <table id="schedule"></table>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * MODELO DE DADOS (estrutura mínima para renderizar igual à planilha)
+     *
+     * - turmas: colunas (1ºA, 1ºB...)
+     * - dias: blocos (SEGUNDA, TERÇA...)
+     * - tempos: linhas (07:00-07:45 etc.)
+     * - intervalo_index: qual linha é o intervalo dentro do array "tempos"
+     * - grade[turno][dia][tempo][turma] = { texto, cor }
+     */
+
+    const DIAS = ["SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA"];
+
+    const CONFIG = {
+      matutino: {
+        titulo: "HORÁRIO MATUTINO",
+        turmas: ["1ºA", "1ºB", "2ºA", "2ºB", "3ºA", "3ºB"],
+        tempos: [
+          "07:00-07:45",
+          "07:45-08:30",
+          "08:30-09:15",
+          "09:15-09:25", // intervalo
+          "09:25-10:10",
+          "10:10-10:55",
+          "10:55-11:40",
+        ],
+        intervalo_index: 3,
+      },
+      vespertino: {
+        titulo: "HORÁRIO VESPERTINO",
+        turmas: ["1ºC", "1ºD", "2ºC", "2ºD", "3ºC", "3ºD"],
+        tempos: [
+          "13:00-13:45",
+          "13:45-14:30",
+          "14:30-15:15",
+          "15:15-15:25", // intervalo
+          "15:25-16:10",
+          "16:10-16:55",
+          "16:55-17:40",
+        ],
+        intervalo_index: 3,
+      }
+    };
+
+    // Exemplo de preenchimento (você vai substituir pelos seus dados reais)
+    // Se não existir célula, renderiza em branco.
+    const GRADE = {
+      matutino: {
+        "SEGUNDA": {
+          "07:00-07:45": {
+            "1ºA": { texto: "BIO-TARCÍSIO", cor: "#b2dfdb" },
+            "1ºB": { texto: "FÍSICA-BRUNO", cor: "#90caf9" },
+          },
+          "07:45-08:30": {
+            "1ºA": { texto: "BIO-TARCÍSIO", cor: "#b2dfdb" },
+            "1ºB": { texto: "BIOLOGIA-BRUNO", cor: "#a5d6a7" },
+          },
+        }
+      },
+      vespertino: {
+        "SEGUNDA": {
+          "13:00-13:45": {
+            "1ºC": { texto: "FILO-GIVA", cor: "#ffe082" },
+            "1ºD": { texto: "FILOSOFIA-BRUNO", cor: "#ffe082" },
+          }
+        }
+      }
+    };
+
+    function dayToStack(day){
+      // Retorna array de letras (inclui Ç e Ã etc. como um caractere)
+      return Array.from(day);
+    }
+
+    function createCell(tag, className, text){
+      const el = document.createElement(tag);
+      if (className) el.className = className;
+      if (text !== undefined) el.textContent = text;
+      return el;
+    }
+
+    function getSlot(turno, dia, tempo, turma){
+      return (GRADE?.[turno]?.[dia]?.[tempo]?.[turma]) ?? null;
+    }
+
+    function render(turno){
+      const cfg = CONFIG[turno];
+      document.getElementById("title").textContent = cfg.titulo;
+
+      const table = document.getElementById("schedule");
+      table.innerHTML = "";
+
+      // THEAD
+      const thead = document.createElement("thead");
+      const trh = document.createElement("tr");
+
+      // Coluna DIA (vazia no cabeçalho)
+      const thDay = createCell("th", "sticky-left", "");
+      thDay.style.width = "34px";
+      trh.appendChild(thDay);
+
+      // Coluna HORÁRIO (vazia no cabeçalho, ou pode colocar "HORA")
+      const thTime = createCell("th", "sticky-left-2", "");
+      thTime.style.width = "92px";
+      trh.appendChild(thTime);
+
+      // Turmas
+      for (const turma of cfg.turmas){
+        const th = createCell("th", "", turma);
+        trh.appendChild(th);
+      }
+
+      thead.appendChild(trh);
+      table.appendChild(thead);
+
+      // TBODY
+      const tbody = document.createElement("tbody");
+
+      for (const dia of DIAS){
+        const tempos = cfg.tempos;
+        const rowsPerDay = tempos.length;
+
+        for (let i = 0; i < tempos.length; i++){
+          const tempo = tempos[i];
+
+          // Intervalo: uma linha destacada (como na planilha)
+          if (i === cfg.intervalo_index){
+            const tri = document.createElement("tr");
+            tri.className = "interval-row";
+            // primeira coluna (dia) – mantém a borda/estrutura
+            // Aqui fazemos uma célula total para manter visual semelhante:
+            const tdi = document.createElement("td");
+            tdi.colSpan = 2 + cfg.turmas.length;
+            const span = document.createElement("span");
+            span.className = "interval-label";
+            span.textContent = "INTERVALO";
+            tdi.appendChild(span);
+            tri.appendChild(tdi);
+            tbody.appendChild(tri);
+            continue;
+          }
+
+          const tr = document.createElement("tr");
+          if (i === 0) tr.classList.add("day-start");
+
+          // Coluna DIA com rowspan (apenas na primeira linha útil do dia)
+          // Atenção: como há uma linha de intervalo que “quebra” no meio,
+          // o rowspan deve considerar apenas as linhas NÃO-intervalo.
+          // Vamos calcular quantas linhas úteis existem:
+          const linhasUteis = tempos.length - 1; // tira a linha do intervalo
+          const firstUsefulIndex = 0; // antes do intervalo, é a primeira
+          if (i === firstUsefulIndex){
+            const tdDay = createCell("td", "day-cell sticky-left");
+            tdDay.rowSpan = linhasUteis;
+
+            const stack = document.createElement("div");
+            stack.className = "day-stack";
+            for (const ch of dayToStack(dia)){
+              const s = document.createElement("div");
+              s.textContent = ch;
+              stack.appendChild(s);
+            }
+            tdDay.appendChild(stack);
+            tr.appendChild(tdDay);
+          }
+
+          // Coluna HORÁRIO
+          const tdTime = createCell("td", "time-cell sticky-left-2", tempo);
+          tr.appendChild(tdTime);
+
+          // Células de turmas
+          for (const turma of cfg.turmas){
+            const td = document.createElement("td");
+            const slot = getSlot(turno, dia, tempo, turma);
+
+            const box = document.createElement("div");
+            box.className = "slot";
+            if (slot){
+              box.textContent = slot.texto;
+              box.style.background = slot.cor || "#fff";
+            } else {
+              box.textContent = ""; // vazio como na planilha quando não preenchido
+              box.style.background = "#fff";
+            }
+            td.appendChild(box);
+            tr.appendChild(td);
+          }
+
+          tbody.appendChild(tr);
+        }
+      }
+
+      table.appendChild(tbody);
+    }
+
+    // Inicializa
+    const turnoSel = document.getElementById("turno");
+    turnoSel.addEventListener("change", () => render(turnoSel.value));
+    render("matutino");
+  </script>
+</body>
+</html>
