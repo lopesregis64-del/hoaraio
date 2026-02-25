@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import timedelta
-import models, schemas, database, websocket_manager, auth, csv, io
+import models, schemas, database, websocket_manager, auth, csv, io, os
 from database import engine, get_db
 from websocket_manager import manager
 
@@ -12,15 +12,25 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Sistema de Horários API")
 
+# Configuração de CORS
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://localhost:5175",
+]
+
+# Adiciona origin do Render se estiver configurada
+cors_origins_env = os.getenv("CORS_ORIGINS")
+if cors_origins_env:
+    # Suporta múltiplos origens separados por vírgula
+    extra_origins = [o.strip() for o in cors_origins_env.split(",")]
+    origins.extend(extra_origins)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5174",
-        "http://localhost:5175",
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
