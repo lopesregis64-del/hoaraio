@@ -1,17 +1,7 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, UniqueConstraint, Time, Enum, Boolean
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint, Time, Enum, Boolean
+from sqlalchemy.orm import relationship
 import enum
-
-SQLALCHEMY_DATABASE_URL = "sqlite:///./app.db"
-# Para PostgreSQL: "postgresql://user:password@postgresserver/db"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
+from database import Base, engine, SessionLocal
 
 class UserType(str, enum.Enum):
     ADMIN = "admin"
@@ -89,4 +79,4 @@ class Allocation(Base):
         UniqueConstraint('professor_id', 'dia_semana', 'slot', 'turno_id', name='_professor_schedule_uc'),
     )
 
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine) - Movido para main.py para controle centralizado

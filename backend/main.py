@@ -46,21 +46,29 @@ def read_root():
 @app.post("/signup", response_model=schemas.UserResponse)
 def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """Criar novo usuário"""
+    print(f"Tentativa de cadastro: {user.email} - tipo: {user.tipo}")
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
+        print(f"Erro: Email {user.email} já existe no banco.")
         raise HTTPException(status_code=400, detail="Email já registrado")
     
-    hashed_password = auth.gerar_hash_senha(user.senha)
-    db_user = models.User(
-        email=user.email,
-        nome=user.nome,
-        senha_hash=hashed_password,
-        tipo=user.tipo
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+    try:
+        hashed_password = auth.gerar_hash_senha(user.senha)
+        db_user = models.User(
+            email=user.email,
+            nome=user.nome,
+            senha_hash=hashed_password,
+            tipo=user.tipo
+        )
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        print(f"Usuário {user.email} criado com sucesso (ID: {db_user.id})")
+        return db_user
+    except Exception as e:
+        print(f"Erro inesperado no signup: {str(e)}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro interno no servidor: {str(e)}")
 
 @app.post("/token", response_model=schemas.Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
