@@ -16,6 +16,9 @@ export function Login({ onLoginSuccess }: LoginProps) {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // API Base URL for both local dev and Render deploy
+  const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001';
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -26,7 +29,7 @@ export function Login({ onLoginSuccess }: LoginProps) {
       formData.append('username', email);
       formData.append('password', password);
 
-      const response = await fetch('http://127.0.0.1:8001/token', {
+      const response = await fetch(`${API_URL}/token`, {
         method: 'POST',
         body: formData,
       });
@@ -61,7 +64,7 @@ export function Login({ onLoginSuccess }: LoginProps) {
     setLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:8001/signup', {
+      const response = await fetch(`${API_URL}/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

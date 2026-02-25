@@ -29,7 +29,7 @@ interface Turma {
 }
 
 export function AdminDashboard() {
-  const { token, logout } = useAuth();
+  const { token, usuarioTipo, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('turnos');
 
@@ -55,31 +55,42 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // API Base URL for both local dev and Render deploy
+  const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001';
+
+  // Helper para fetch com auth
+  const fetchAuth = async (endpoint: string, options: any = {}) => {
+    const res = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${token}`
+      }
+    });
+    if (res.status === 401) {
+      logout();
+      navigate('/');
+      throw new Error('Não autorizado');
+    }
+    return res;
+  };
+
   useEffect(() => {
-    if (token) {
-      carregarDados(token);
-    } else {
-      // Se não tem token no contexto, redireciona pro login
+    if (token && usuarioTipo === 'admin') {
+      carregarDados();
+    } else if (usuarioTipo !== 'admin') {
       navigate('/');
     }
-  }, [token]);
+  }, [token, usuarioTipo]);
 
-  const carregarDados = async (tokenAtivo: string) => {
+  const carregarDados = async () => {
     try {
-      const headers = { Authorization: `Bearer ${tokenAtivo}` };
-
       const [resTurnos, resProfessores, resDisciplinas, resTurmas] = await Promise.all([
-        fetch('http://127.0.0.1:8001/admin/turnos', { headers }),
-        fetch('http://127.0.0.1:8001/admin/professors', { headers }),
-        fetch('http://127.0.0.1:8001/admin/subjects', { headers }),
-        fetch('http://127.0.0.1:8001/admin/classes', { headers })
+        fetchAuth('/admin/turnos'),
+        fetchAuth('/admin/professors'),
+        fetchAuth('/admin/subjects'),
+        fetchAuth('/admin/classes')
       ]);
-
-      if (resTurnos.status === 401 || resProfessores.status === 401 || resDisciplinas.status === 401 || resTurmas.status === 401) {
-        logout();
-        navigate('/');
-        return;
-      }
 
       if (resTurnos.ok) setTurnos(await resTurnos.json());
       if (resProfessores.ok) setProfessores(await resProfessores.json());
@@ -95,20 +106,13 @@ export function AdminDashboard() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8001/admin/turnos', {
+      const res = await fetchAuth('/admin/turnos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(novoTurno),
       });
-
-      if (res.status === 401) {
-        logout();
-        navigate('/');
-        return;
-      }
 
       if (res.ok) {
         const data = await res.json();
@@ -130,11 +134,10 @@ export function AdminDashboard() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8001/admin/professors', {
+      const res = await fetchAuth('/admin/professors', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           email: emailProf,
@@ -143,12 +146,6 @@ export function AdminDashboard() {
           tipo: 'professor',
         }),
       });
-
-      if (res.status === 401) {
-        logout();
-        navigate('/');
-        return;
-      }
 
       if (res.ok) {
         const data = await res.json();
@@ -172,20 +169,13 @@ export function AdminDashboard() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8001/admin/subjects', {
+      const res = await fetchAuth('/admin/subjects', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ nome: nomeDisciplina }),
       });
-
-      if (res.status === 401) {
-        logout();
-        navigate('/');
-        return;
-      }
 
       if (res.ok) {
         const data = await res.json();
@@ -207,20 +197,13 @@ export function AdminDashboard() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8001/admin/classes', {
+      const res = await fetchAuth('/admin/classes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ nome: nomeTurma, turno: turnoTurma }),
       });
-
-      if (res.status === 401) {
-        logout();
-        navigate('/');
-        return;
-      }
 
       if (res.ok) {
         const data = await res.json();
@@ -263,7 +246,7 @@ export function AdminDashboard() {
       if (res.ok) {
         const data = await res.json();
         alert(`Sucesso: ${data.sucessos} professores importados.\nErros: ${data.erros.length}\n${data.erros.join('\n')}`);
-        if (token) carregarDados(token);
+        if (token) carregarDados();
         setError('');
       } else {
         const data = await res.json();
@@ -301,7 +284,7 @@ export function AdminDashboard() {
       if (res.ok) {
         const data = await res.json();
         alert(`Sucesso: ${data.sucessos} linhas processadas.\nErros: ${data.erros.length}\n${data.erros.join('\n')}`);
-        if (token) carregarDados(token);
+        if (token) carregarDados();
         setError('');
       } else {
         const data = await res.json();
@@ -343,19 +326,18 @@ export function AdminDashboard() {
   const handleDeletar = async (tipo: string, id: number) => {
     if (!window.confirm('Tem certeza que deseja excluir este item?')) return;
     try {
-      const res = await fetch(`http://127.0.0.1:8001/admin/${tipo}/${id}`, {
+      let endpoint = '';
+      if (tipo === 'turnos') endpoint = `/admin/turnos/${id}`;
+      if (tipo === 'professors') endpoint = `/admin/professors/${id}`;
+      if (tipo === 'subjects') endpoint = `/admin/subjects/${id}`;
+      if (tipo === 'classes') endpoint = `/admin/classes/${id}`;
+
+      const res = await fetchAuth(endpoint, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (res.status === 401) {
-        logout();
-        navigate('/');
-        return;
-      }
-
       if (res.ok) {
-        if (token) carregarDados(token);
+        carregarDados();
         setError('');
       } else {
         const data = await res.json();

@@ -97,24 +97,36 @@ export function ProfessorDashboard() {
   const [editandoSubject, setEditandoSubject] = useState<{ id: number; quantidade_aulas: number } | null>(null);
   const [draggingFromGrid, setDraggingFromGrid] = useState<{ allocationId: number; psItem: ProfessorSubject } | null>(null);
 
-  // Helper function para fazer requisições autenticadas
-  const fetchAutenticado = async (url: string, options: any = {}) => {
-    if (!token) {
-      throw new Error('Token não disponível');
-    }
-    const res = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+  // API Base URL for both local dev and Render deploy
+  const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001';
 
-    if (res.status === 401) {
-      logout();
-      navigate('/');
+  // Helper function para fazer requisições autenticadas
+  const fetchAutenticado = async (endpoint: string, options: any = {}) => {
+    try {
+      if (!token) {
+        throw new Error('Token não disponível');
+      }
+      const res = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers: {
+          ...options.headers,
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.status === 401) {
+        logout();
+        navigate('/');
+      }
+      return res;
+    } catch (err) {
+      console.error('Request failed:', err);
+      throw err;
     }
-    return res;
+  };
+
+  const handleError = (msg: string) => {
+    setError(msg);
+    setTimeout(() => setError(''), 5000);
   };
 
   // Verificação de autenticação
@@ -126,7 +138,6 @@ export function ProfessorDashboard() {
 
   useEffect(() => {
     if (token) {
-      console.log('Token disponível, carregando dados...');
       carregarDados();
       obterProfessorId();
     }
@@ -135,7 +146,7 @@ export function ProfessorDashboard() {
   const obterProfessorId = async () => {
     try {
       console.log('Obtendo dados do professor via API...');
-      const res = await fetchAutenticado('http://127.0.0.1:8001/professor/me');
+      const res = await fetchAutenticado('/professor/me');
       console.log('Resposta /professor/me:', res.status);
 
       if (res.ok) {
@@ -175,7 +186,9 @@ export function ProfessorDashboard() {
     let reconnectTimeout: any = null;
 
     const connectWS = () => {
-      ws = new WebSocket('ws://127.0.0.1:8001/ws');
+      // Create WebSocket URL dynamically based on the HTTP URL
+      const wsUrl = API_URL.replace(/^http/, 'ws') + '/ws';
+      ws = new WebSocket(wsUrl);
 
       ws.onmessage = (event) => {
         try {
@@ -216,7 +229,7 @@ export function ProfessorDashboard() {
       console.log('Iniciando carregamento de dados...');
 
       // Carregar turnos
-      const resTurnos = await fetchAutenticado('http://127.0.0.1:8001/turnos');
+      const resTurnos = await fetchAutenticado('/turnos');
       console.log('Resposta turnos:', resTurnos.status);
 
       if (resTurnos.ok) {
@@ -233,7 +246,7 @@ export function ProfessorDashboard() {
       }
 
       // Carregar disciplinas
-      const resDisciplinas = await fetchAutenticado('http://127.0.0.1:8001/subjects');
+      const resDisciplinas = await fetchAutenticado('/subjects');
       if (resDisciplinas.ok) {
         const data = await resDisciplinas.json();
         setDisciplinas(data);
@@ -242,7 +255,7 @@ export function ProfessorDashboard() {
       }
 
       // Carregar turmas
-      const resTurmas = await fetchAutenticado('http://127.0.0.1:8001/classes');
+      const resTurmas = await fetchAutenticado('/classes');
       if (resTurmas.ok) {
         const data = await resTurmas.json();
         setTurmas(data);
@@ -251,7 +264,7 @@ export function ProfessorDashboard() {
       }
 
       // Carregar professores
-      const resProfessores = await fetchAutenticado('http://127.0.0.1:8001/professors');
+      const resProfessores = await fetchAutenticado('/professors');
       if (resProfessores.ok) {
         const data = await resProfessores.json();
         setProfessores(data);
@@ -268,7 +281,7 @@ export function ProfessorDashboard() {
     try {
       console.log(`Carregando disciplinas do turno ${turnoId}...`);
       const res = await fetchAutenticado(
-        `http://127.0.0.1:8001/professor/professor-subjects?turno_id=${turnoId}`
+        `/professor/professor-subjects?turno_id=${turnoId}`
       );
       console.log('Resposta disciplinas:', res.status);
 
@@ -290,7 +303,7 @@ export function ProfessorDashboard() {
   const carregarAlocacoes = async (turnoId: number) => {
     try {
       const res = await fetchAutenticado(
-        `http://127.0.0.1:8001/professor/allocations?turno_id=${turnoId}`
+        `/professor/allocations?turno_id=${turnoId}`
       );
       if (res.ok) {
         const data = await res.json();
@@ -343,7 +356,7 @@ export function ProfessorDashboard() {
       });
 
       const res = await fetchAutenticado(
-        'http://127.0.0.1:8001/professor/professor-subjects',
+        '/professor/professor-subjects',
         {
           method: 'POST',
           headers: {
@@ -414,9 +427,9 @@ export function ProfessorDashboard() {
 
       try {
         // Deletar alocação antiga
-        await fetchAutenticado(`http://127.0.0.1:8001/professor/allocations/${allocationId}`, { method: 'DELETE' });
+        await fetchAutenticado(`/professor/allocations/${allocationId}`, { method: 'DELETE' });
         // Criar nova alocação no novo slot
-        const res = await fetchAutenticado('http://127.0.0.1:8001/professor/allocations', {
+        const res = await fetchAutenticado('/professor/allocations', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -459,7 +472,7 @@ export function ProfessorDashboard() {
 
     try {
       const res = await fetchAutenticado(
-        'http://127.0.0.1:8001/professor/allocations',
+        '/professor/allocations',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -495,7 +508,7 @@ export function ProfessorDashboard() {
   const handleRemoverAlocacao = async (allocationId: number) => {
     try {
       const res = await fetchAutenticado(
-        `http://127.0.0.1:8001/professor/allocations/${allocationId}`,
+        `/professor/allocations/${allocationId}`,
         { method: 'DELETE' }
       );
 
@@ -519,7 +532,7 @@ export function ProfessorDashboard() {
     if (!window.confirm('Excluir esta disciplina e todas as suas alocações na grade?')) return;
     try {
       const res = await fetchAutenticado(
-        `http://127.0.0.1:8001/professor/professor-subjects/${psId}`,
+        `/professor/professor-subjects/${psId}`,
         { method: 'DELETE' }
       );
       if (res.ok || res.status === 204) {
@@ -541,7 +554,7 @@ export function ProfessorDashboard() {
       const ps = professorSubjects.find(p => p.id === editandoSubject.id);
       if (!ps) return;
       const res = await fetchAutenticado(
-        `http://127.0.0.1:8001/professor/professor-subjects/${editandoSubject.id}`,
+        `/professor/professor-subjects/${editandoSubject.id}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },

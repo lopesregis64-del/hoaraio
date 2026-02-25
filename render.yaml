@@ -1,0 +1,29 @@
+services:
+  # BACKEND - FastAPI
+  - type: web
+    name: horario-backend
+    env: python
+    region: ohio
+    plan: free
+    buildCommand: "cd backend && pip install -r requirements.txt"
+    startCommand: "cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: CORS_ORIGINS
+        value: "https://horario-frontend.onrender.com" # Ajuste depois para a URL real do frontend
+
+  # FRONTEND - React (Vite)
+  - type: web
+    name: horario-frontend
+    env: static
+    region: ohio
+    plan: free
+    buildCommand: "cd frontend && npm install && npm run build"
+    staticPublishPath: "./frontend/dist"
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      # O Vite exige que as variáveis começem com VITE_ para irem pro build
+      - key: VITE_API_URL
+        value: "https://horario-backend.onrender.com" # Ajuste depois para a URL real do backend
