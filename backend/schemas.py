@@ -131,3 +131,14 @@ class Allocation(AllocationBase):
     professor_subject_id: int
     class Config:
         orm_mode = True
+
+# ===== LOGS DE AUDITORIA =====
+class AuditLog(BaseModel):
+    id: int
+    user_id: int
+    user_nome: str
+    acao: str
+    detalhes: str
+    data_hora: str
+    class Config:
+        orm_mode = True

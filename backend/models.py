@@ -79,4 +79,13 @@ class Allocation(Base):
         UniqueConstraint('professor_id', 'dia_semana', 'slot', 'turno_id', name='_professor_schedule_uc'),
     )
 
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user_nome = Column(String)
+    acao = Column(String) # Ex: "Alocação", "Remoção", "Importação"
+    detalhes = Column(String)
+    data_hora = Column(String) # Vamos armazenar como string ISO para simplificar transporte
+
 # Base.metadata.create_all(bind=engine) - Movido para main.py para controle centralizado

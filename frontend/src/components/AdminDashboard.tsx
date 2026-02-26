@@ -30,6 +30,14 @@ interface Turma {
   turno: string;
 }
 
+interface AuditLog {
+  id: number;
+  user_nome: string;
+  acao: string;
+  detalhes: string;
+  data_hora: string;
+}
+
 export function AdminDashboard() {
   const { token, usuarioTipo, logout } = useAuth();
   const navigate = useNavigate();
@@ -51,6 +59,7 @@ export function AdminDashboard() {
 
   // Turmas
   const [turmas, setTurmas] = useState<Turma[]>([]);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
   const [nomeTurma, setNomeTurma] = useState('');
   const [turnoTurma, setTurnoTurma] = useState('');
 
@@ -87,18 +96,19 @@ export function AdminDashboard() {
 
   const carregarDados = async () => {
     try {
-      const [resTurnos, resProfessores, resDisciplinas, resTurmas] = await Promise.all([
+      const [resTurnos, resProfessores, resDisciplinas, resTurmas, resLogs] = await Promise.all([
         fetchAuth('/admin/turnos'),
         fetchAuth('/admin/professors'),
-        fetchAuth('/admin/subjects'),
-        fetchAuth('/admin/classes')
+        fetchAuth('/subjects'),
+        fetchAuth('/classes'),
+        fetchAuth('/admin/audit-logs'),
       ]);
 
       if (resTurnos.ok) setTurnos(await resTurnos.json());
       if (resProfessores.ok) setProfessores(await resProfessores.json());
       if (resDisciplinas.ok) setDisciplinas(await resDisciplinas.json());
       if (resTurmas.ok) setTurmas(await resTurmas.json());
-
+      if (resLogs.ok) setLogs(await resLogs.json());
     } catch (err) {
       setError('Erro ao carregar dados');
     }
@@ -478,6 +488,12 @@ export function AdminDashboard() {
         >
           Turmas
         </button>
+        <button
+          className={activeTab === 'logs' ? 'active' : ''}
+          onClick={() => setActiveTab('logs')}
+        >
+          📋 Logs
+        </button>
       </div>
 
       <div className="admin-content">
@@ -674,6 +690,36 @@ export function AdminDashboard() {
                   <button onClick={() => handleDeletar('classes', t.id)} className="delete-btn">Excluir</button>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'logs' && (
+          <div className="tab-content">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0 }}>📋 Log de Alterações</h2>
+              <button onClick={carregarDados} className="global-grade-btn" style={{ fontSize: '12px' }}>Atualizar</button>
+            </div>
+
+            <div className="audit-log-container">
+              {logs.length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>Nenhum log registrado ainda.</p>
+              ) : (
+                <div className="audit-log-list">
+                  {logs.map((log) => (
+                    <div key={log.id} className="audit-log-item">
+                      <div className="log-header">
+                        <span className="log-action">{log.acao}</span>
+                        <span className="log-date">{new Date(log.data_hora).toLocaleString('pt-BR')}</span>
+                      </div>
+                      <div className="log-body">
+                        <span className="log-user"><strong>{log.user_nome}</strong>:</span>
+                        <span className="log-details">{log.detalhes}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

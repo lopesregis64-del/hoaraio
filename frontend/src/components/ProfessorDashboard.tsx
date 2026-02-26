@@ -1048,7 +1048,11 @@ export function ProfessorDashboard() {
                               <button onClick={() => setEditandoSubject(null)} style={{ fontSize: '12px', padding: '2px 8px', background: '#94a3b8', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>✕</button>
                             </div>
                           ) : (
-                            <p className="aulas-info">Aulas: {ps.aulas_alocadas}/{ps.quantidade_aulas}</p>
+                            <p className="aulas-info">
+                              {ps.quantidade_aulas - ps.aulas_alocadas === 0
+                                ? '✅ Completa'
+                                : `⏳ Faltam ${ps.quantidade_aulas - ps.aulas_alocadas} aulas`}
+                            </p>
                           )}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>

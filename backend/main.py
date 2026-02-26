@@ -590,7 +590,32 @@ async def import_all_data(
             db.rollback()
             erros.append(f"Linha {idx+1} ({n_prof}): {str(e)}")
             
+    # Registrar log de importação total
+    await record_audit_log(db, current_user, "Importação Geral", f"Importação de backup realizada via CSV. {sucessos} itens processados.")
+    
     return {"sucessos": sucessos, "erros": erros}
+
+# --- AUDITORIA ---
+async def record_audit_log(db: Session, user: models.User, acao: str, detalhes: str):
+    """Auxiliar para gravar logs de auditoria"""
+    from datetime import datetime
+    new_log = models.AuditLog(
+        user_id=user.id,
+        user_nome=user.nome,
+        acao=acao,
+        detalhes=detalhes,
+        data_hora=datetime.now().isoformat()
+    )
+    db.add(new_log)
+    db.commit()
+
+@app.get("/admin/audit-logs", response_model=List[schemas.AuditLog])
+async def get_audit_logs(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.obter_usuario_admin)
+):
+    """Listar logs de auditoria (mais recentes primeiro)"""
+    return db.query(models.AuditLog).order_by(models.AuditLog.id.desc()).limit(100).all()
 
 # --- DISCIPLINAS ---
 @app.post("/admin/subjects", response_model=schemas.Subject)
@@ -883,6 +908,12 @@ async def create_allocation(
         db.commit()
         db.refresh(db_allocation)
         
+        # Registrar log
+        sub_nome = db.query(models.Subject).filter(models.Subject.id == db_allocation.subject_id).first().nome
+        class_nome = db.query(models.SchoolClass).filter(models.SchoolClass.id == db_allocation.class_id).first().nome
+        detalhe = f"{sub_nome} alocada na turma {class_nome} (Dia {db_allocation.dia_semana}, Aula {db_allocation.slot + 1})"
+        await record_audit_log(db, current_user, "Alocação", detalhe)
+
         # Broadcast the change
         await manager.broadcast({
             "type": "new_allocation",
@@ -939,10 +970,18 @@ async def delete_allocation(
     if prof_subject and prof_subject.aulas_alocadas > 0:
         prof_subject.aulas_alocadas -= 1
     
+    # Capturar dados para o log antes de deletar
+    sub_nome = db.query(models.Subject).filter(models.Subject.id == db_allocation.subject_id).first().nome
+    class_nome = db.query(models.SchoolClass).filter(models.SchoolClass.id == db_allocation.class_id).first().nome
+    detalhe = f"{sub_nome} removida da turma {class_nome} (Dia {db_allocation.dia_semana}, Aula {db_allocation.slot + 1})"
+    
     alloc_data = schemas.Allocation.from_orm(db_allocation).dict()
     db.delete(db_allocation)
     db.commit()
     
+    # Registrar log após o commit
+    await record_audit_log(db, current_user, "Remoção", detalhe)
+
     # Broadcast the deletion
     await manager.broadcast({
         "type": "deleted_allocation",
