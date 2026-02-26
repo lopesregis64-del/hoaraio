@@ -1184,7 +1184,6 @@ export function ProfessorDashboard() {
                             >
                               <div className="card-subject">{obterNomeDisciplina(ps.subject_id)}</div>
                               <div className="card-class">{obterNomeTurma(ps.class_id)}</div>
-                              <div className="card-count-hint">Faltam {numRestantes}</div>
                             </div>
                           ));
                         })
