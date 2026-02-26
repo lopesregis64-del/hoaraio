@@ -1037,10 +1037,7 @@ export function ProfessorDashboard() {
                                               }}
                                             >
                                               <div className="aula-text-compact">
-                                                {isAdmin || aula.professor_id === professorId || (filtroProfessorId && aula.professor_id === filtroProfessorId)
-                                                  ? `${abreviarDisciplina(obterNomeDisciplina(aula.subject_id))}-${abreviarNome(professores.find(p => p.id === aula.professor_id)?.nome || '')}`
-                                                  : abreviarNome(professores.find(p => p.id === aula.professor_id)?.nome || '')
-                                                }
+                                                {`${abreviarDisciplina(obterNomeDisciplina(aula.subject_id))}-${abreviarNome(professores.find(p => p.id === aula.professor_id)?.nome || '')}`}
                                               </div>
                                               {(isAdmin || aula.professor_id === professorId) && (
                                                 <button
