@@ -65,31 +65,44 @@ export function Login({ onLoginSuccess }: LoginProps) {
   return (
     <div className="login-container">
       <div className="login-box">
-        <h1>Sistema de Horários</h1>
+        <div className="login-header">
+          <div className="logo-icon">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <h1>Sistema de Horários</h1>
+          <h2>Acesse sua conta para continuar</h2>
+        </div>
 
         {error && <div className="error-message">{error}</div>}
 
         <form onSubmit={handleLogin}>
-          <h2>Login</h2>
+          <div className="input-group">
+            <input
+              type="email"
+              placeholder="Digite seu email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-
-          <input
-            type="password"
-            placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          <div className="input-group">
+            <input
+              type="password"
+              placeholder="Digite sua senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
           <button type="submit" disabled={loading}>
-            {loading ? 'Entrando...' : 'Entrar'}
+            {loading ? 'Autenticando...' : 'Entrar no Sistema'}
           </button>
         </form>
 
