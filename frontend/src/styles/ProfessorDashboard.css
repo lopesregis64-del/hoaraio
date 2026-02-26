@@ -1024,14 +1024,13 @@ tr.day-start td {
   }
 
   .aula-alocada-mini {
-    background: #fff !important;
-    border: 0.75pt solid #000 !important;
-    padding: 5pt !important;
-    border-radius: 5pt !important;
-    min-height: 45pt;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    min-height: auto !important;
+    display: block !important;
   }
 
   .aula-text-compact {
