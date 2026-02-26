@@ -359,6 +359,32 @@ export function AdminDashboard() {
     navigate('/professor');
   };
 
+  const handleExportAll = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/admin/export-all`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!res.ok) throw new Error('Falha ao baixar backup');
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `backup_horarios_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError('Erro ao baixar backup');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="admin-dashboard">
       <header className="admin-header">
@@ -375,11 +401,12 @@ export function AdminDashboard() {
 
       <div className="admin-backup-bar" style={{ display: 'flex', gap: '10px', padding: '10px 30px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
         <button
-          onClick={() => window.location.href = `${API_URL}/admin/export-all?token=${token}`}
+          onClick={handleExportAll}
           className="backup-btn"
           style={{ padding: '8px 16px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
+          disabled={loading}
         >
-          📥 Baixar Backup Geral (CSV)
+          {loading ? '📥 Processando...' : '📥 Baixar Backup Geral (CSV)'}
         </button>
         <div className="import-wrapper" style={{ position: 'relative' }}>
           <button
