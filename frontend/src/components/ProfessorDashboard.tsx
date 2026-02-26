@@ -70,7 +70,7 @@ function abreviarDisciplina(nome: string) {
 export function ProfessorDashboard() {
   const { token, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('disciplinas');
+  const [activeTab, setActiveTab] = useState('disciplinas'); // Mantido o valor da chave interno, mas rótulos traduzidos no JSX
 
   // Estados para dados
   const [turnos, setTurnos] = useState<Turno[]>([]);
@@ -662,12 +662,12 @@ export function ProfessorDashboard() {
     });
 
     const turnoNome = turnos.find(t => t.id === selectedTurno)?.nome || '';
-    const escolaNome = "E.E. Alcides Cesar Meneses";
+    const escolaNome = "C.E. Alcides Cesar Meneses";
 
     // Cabeçalho institucional (MAIS PRÓXIMO DO TOPO)
     doc.setFontSize(16);
     doc.setTextColor(30, 41, 59);
-    doc.text(`Relatório de Horários - ${escolaNome}`, doc.internal.pageSize.getWidth() / 2, 10, { align: 'center' });
+    doc.text(`Horários - ${escolaNome}`, doc.internal.pageSize.getWidth() / 2, 10, { align: 'center' });
 
     doc.setFontSize(10);
     doc.setTextColor(71, 85, 105);
@@ -1334,9 +1334,9 @@ export function ProfessorDashboard() {
                                 if (slot === 2) {
                                   renderRows.push(
                                     <tr key={`${diaIdx}-interval`} className="interval-row">
-                                      <td className={`time-cell sticky-left-2 day-${diaIdx}`}>INTERVALO</td>
+                                      <td className={`time-cell sticky-left-2 day-${diaIdx}`}>PAUSA</td>
                                       <td colSpan={turmasDoTurno.length} className="interval-cell text-center">
-                                        PAUSA
+                                        INTERVALO (RECREIO)
                                       </td>
                                     </tr>
                                   );

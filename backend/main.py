@@ -349,7 +349,7 @@ async def import_professors_full(
             continue
         
         # Pular cabeçalho se detectado na primeira linha
-        if idx == 0 and "nome" in row[0].lower() and "email" in row[1].lower():
+        if idx == 0 and ("nome" in row[0].lower() or "professor" in row[0].lower()):
             continue
             
         try:
@@ -414,10 +414,181 @@ async def import_professors_full(
                 existing_ps.quantidade_aulas = int(q_aulas) # Atualiza se já existir
                 
             sucessos += 1
-            db.commit() # Commit por linha para garantir integridade parcial se desejar, ou no final
+            db.commit()
         except Exception as e:
             db.rollback()
             erros.append(f"Linha {idx+1} ({e_prof}): {str(e)}")
+            
+    return {"sucessos": sucessos, "erros": erros}
+
+
+@app.get("/admin/export-all")
+async def export_all_data(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.obter_usuario_admin)
+):
+    """Exportar backup completo do sistema em CSV (incluindo alocações)"""
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=';')
+    
+    # Cabeçalho: professor;email;senha;turma;disciplina;turno;qtd_aulas;dia;slot
+    writer.writerow(["nome_prof", "email_prof", "senha_prof", "nome_turma", "nome_disciplina", "nome_turno", "quantidade_aulas", "dia_semana", "slot"])
+    
+    # Pegar todas as alocações CROSS ProfessorSubject
+    allocations = (
+        db.query(models.Allocation, models.ProfessorSubject, models.Professor, models.User, models.SchoolClass, models.Subject, models.Turno)
+        .join(models.ProfessorSubject, models.Allocation.professor_subject_id == models.ProfessorSubject.id)
+        .join(models.Professor, models.ProfessorSubject.professor_id == models.Professor.id)
+        .join(models.User, models.Professor.user_id == models.User.id)
+        .join(models.SchoolClass, models.ProfessorSubject.class_id == models.SchoolClass.id)
+        .join(models.Subject, models.ProfessorSubject.subject_id == models.Subject.id)
+        .join(models.Turno, models.ProfessorSubject.turno_id == models.Turno.id)
+        .all()
+    )
+    
+    for a, ps, prof, u, sc, sub, t in allocations:
+        writer.writerow([
+            prof.nome, u.email, "EXP123", # Senha mascarada por segurança na exportação
+            sc.nome, sub.nome, t.nome, ps.quantidade_aulas,
+            a.dia_semana, a.slot
+        ])
+    
+    # Adicionar também ProfessorSubjects que NÃO possuem alocação ainda
+    all_ps = (
+        db.query(models.ProfessorSubject, models.Professor, models.User, models.SchoolClass, models.Subject, models.Turno)
+        .join(models.Professor, models.ProfessorSubject.professor_id == models.Professor.id)
+        .join(models.User, models.Professor.user_id == models.User.id)
+        .join(models.SchoolClass, models.ProfessorSubject.class_id == models.SchoolClass.id)
+        .join(models.Subject, models.ProfessorSubject.subject_id == models.Subject.id)
+        .join(models.Turno, models.ProfessorSubject.turno_id == models.Turno.id)
+        .all()
+    )
+    
+    # Mapear PS IDs ja exportados para evitar duplicidade onde não há aula
+    ps_com_aula = {a.professor_subject_id for a, *rest in allocations}
+    
+    for ps, prof, u, sc, sub, t in all_ps:
+        if ps.id not in ps_com_aula:
+            writer.writerow([
+                prof.nome, u.email, "EXP123",
+                sc.nome, sub.nome, t.nome, ps.quantidade_aulas,
+                "", "" # Sem dia/slot
+            ])
+
+    content = output.getvalue()
+    return Response(
+        content=content,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=backup_horarios.csv"}
+    )
+
+
+@app.post("/admin/import-all")
+async def import_all_data(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.obter_usuario_admin)
+):
+    """Importar backup completo (Backup Geral)"""
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="O arquivo deve ser um CSV")
+    
+    contentArr = await file.read()
+    try:
+        content = contentArr.decode('utf-8')
+    except UnicodeDecodeError:
+        content = contentArr.decode('latin-1')
+        
+    reader = csv.reader(io.StringIO(content), delimiter=';')
+    
+    sucessos = 0
+    erros = []
+    
+    # IMPORTANTE: No import "ALL", vamos primeiro criar as entidades e depois as alocações.
+    for idx, row in enumerate(reader):
+        if not row or len(row) < 7:
+            continue
+        if idx == 0 and "nome" in row[0].lower():
+            continue
+            
+        try:
+            n_prof, e_prof, s_prof, n_turma, n_sub, n_turno, q_aulas = [s.strip() for s in row[:7]]
+            dia_raw = row[7].strip() if len(row) > 7 else ""
+            slot_raw = row[8].strip() if len(row) > 8 else ""
+            
+            # Repetimos a lógica de import-full para entidades base...
+            db_turno = db.query(models.Turno).filter(models.Turno.nome.ilike(n_turno)).first()
+            if not db_turno:
+                db_turno = models.Turno(nome=n_turno, hora_inicio="07:00", hora_fim="12:00")
+                db.add(db_turno); db.flush()
+            
+            db_user = db.query(models.User).filter(models.User.email == e_prof).first()
+            if not db_user:
+                hashed_pw = auth.gerar_hash_senha(s_prof if s_prof != "EXP123" else "mudar123")
+                db_user = models.User(email=e_prof, nome=n_prof, senha_hash=hashed_pw, tipo=models.UserType.PROFESSOR)
+                db.add(db_user); db.flush()
+            
+            db_prof = db.query(models.Professor).filter(models.Professor.user_id == db_user.id).first()
+            if not db_prof:
+                db_prof = models.Professor(user_id=db_user.id, nome=n_prof)
+                db.add(db_prof); db.flush()
+            
+            db_sub = db.query(models.Subject).filter(models.Subject.nome.ilike(n_sub)).first()
+            if not db_sub:
+                db_sub = models.Subject(nome=n_sub); db.add(db_sub); db.flush()
+                
+            db_class = db.query(models.SchoolClass).filter(
+                models.SchoolClass.nome.ilike(n_turma), 
+                models.SchoolClass.turno == db_turno.nome
+            ).first()
+            if not db_class:
+                db_class = models.SchoolClass(nome=n_turma, turno=db_turno.nome)
+                db.add(db_class); db.flush()
+                
+            existing_ps = db.query(models.ProfessorSubject).filter(
+                models.ProfessorSubject.professor_id == db_prof.id,
+                models.ProfessorSubject.subject_id == db_sub.id,
+                models.ProfessorSubject.class_id == db_class.id,
+                models.ProfessorSubject.turno_id == db_turno.id
+            ).first()
+            
+            if not existing_ps:
+                existing_ps = models.ProfessorSubject(
+                    professor_id=db_prof.id, subject_id=db_sub.id, class_id=db_class.id,
+                    turno_id=db_turno.id, quantidade_aulas=int(q_aulas)
+                )
+                db.add(existing_ps); db.flush()
+            
+            # AGORA AS ALOCAÇÕES (Se houver dia/slot)
+            if dia_raw != "" and slot_raw != "":
+                dia = int(dia_raw)
+                slot = int(slot_raw)
+                
+                # Verificar se já existe essa alocação para evitar erro de UniqueConstraint
+                existing_alloc = db.query(models.Allocation).filter(
+                    models.Allocation.class_id == db_class.id,
+                    models.Allocation.dia_semana == dia,
+                    models.Allocation.slot == slot,
+                    models.Allocation.turno_id == db_turno.id
+                ).first()
+                
+                if not existing_alloc:
+                    new_alloc = models.Allocation(
+                        professor_subject_id = existing_ps.id,
+                        professor_id = db_prof.id,
+                        subject_id = db_sub.id,
+                        class_id = db_class.id,
+                        turno_id = db_turno.id,
+                        dia_semana = dia,
+                        slot = slot
+                    )
+                    db.add(new_alloc)
+
+            sucessos += 1
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            erros.append(f"Linha {idx+1} ({n_prof}): {str(e)}")
             
     return {"sucessos": sucessos, "erros": erros}
 

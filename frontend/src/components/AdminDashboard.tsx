@@ -373,6 +373,57 @@ export function AdminDashboard() {
         </button>
       </header>
 
+      <div className="admin-backup-bar" style={{ display: 'flex', gap: '10px', padding: '10px 30px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+        <button
+          onClick={() => window.location.href = `${API_URL}/admin/export-all?token=${token}`}
+          className="backup-btn"
+          style={{ padding: '8px 16px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
+        >
+          📥 Baixar Backup Geral (CSV)
+        </button>
+        <div className="import-wrapper" style={{ position: 'relative' }}>
+          <button
+            className="backup-btn"
+            style={{ padding: '8px 16px', background: '#0891b2', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
+          >
+            📤 Restaurar Backup Geral (CSV)
+          </button>
+          <input
+            type="file"
+            accept=".csv"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              if (!window.confirm("Isso irá importar professores, turmas e alocações. Deseja continuar?")) return;
+
+              setLoading(true);
+              const formData = new FormData();
+              formData.append('file', file);
+              try {
+                const res = await fetch(`${API_URL}/admin/import-all`, {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${token}` },
+                  body: formData,
+                });
+                if (res.ok) {
+                  const data = await res.json();
+                  alert(`Sucesso: ${data.sucessos} itens processados.\nErros: ${data.erros.length}`);
+                  carregarDados();
+                } else {
+                  alert("Erro ao importar backup");
+                }
+              } catch (err) {
+                alert("Erro de conexão");
+              } finally {
+                setLoading(false);
+                e.target.value = '';
+              }
+            }}
+            style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+          />
+        </div>
+      </div>
+
       {error && <div className="error-message">{error}</div>}
 
       <div className="admin-tabs">

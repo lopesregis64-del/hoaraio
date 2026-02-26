@@ -181,7 +181,7 @@ export function Login({ onLoginSuccess }: LoginProps) {
               className="toggle-btn"
               onClick={() => setIsSignUp(true)}
             >
-              Não tem conta? Crie uma
+              Não tem conta? Cadastre-se aqui
             </button>
           </form>
         )}
