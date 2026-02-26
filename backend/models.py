@@ -67,7 +67,7 @@ class Allocation(Base):
     professor_id = Column(Integer, ForeignKey("professors.id"))
     subject_id = Column(Integer, ForeignKey("subjects.id"))
     class_id = Column(Integer, ForeignKey("school_classes.id"))
-    classroom_id = Column(Integer, ForeignKey("classrooms.id"))
+    classroom_id = Column(Integer, ForeignKey("classrooms.id"), nullable=True)
     turno_id = Column(Integer, ForeignKey("turnos.id"))
     dia_semana = Column(Integer) # 0-4 (Seg-Sex)
     slot = Column(Integer) # 0-5 (6 aulas)

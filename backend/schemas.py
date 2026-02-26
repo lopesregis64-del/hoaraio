@@ -118,7 +118,7 @@ class AllocationBase(BaseModel):
     professor_id: int
     subject_id: int
     class_id: int
-    classroom_id: int
+    classroom_id: Optional[int] = None
     turno_id: int
     dia_semana: int
     slot: int

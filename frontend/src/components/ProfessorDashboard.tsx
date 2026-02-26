@@ -434,7 +434,6 @@ export function ProfessorDashboard() {
             professor_id: psItem.professor_id,
             subject_id: psItem.subject_id,
             class_id: classId,
-            classroom_id: 1,
             turno_id: selectedTurno,
             dia_semana: dia,
             slot: slot,
@@ -478,7 +477,6 @@ export function ProfessorDashboard() {
             professor_id: draggedItem.professor_id,
             subject_id: draggedItem.subject_id,
             class_id: classId,
-            classroom_id: 1,
             turno_id: selectedTurno,
             dia_semana: dia,
             slot: slot,
@@ -920,7 +918,7 @@ export function ProfessorDashboard() {
                               >
                                 <div className="card-subject">{obterNomeDisciplina(ps.subject_id)}</div>
                                 <div className="card-class">{obterNomeTurma(ps.class_id)}</div>
-                                {isSelected && <div style={{ fontSize: '9px', color: '#667eea', marginTop: '2px' }}>✓ Clique num horário</div>}
+                                {isSelected && idx === 0 && <div style={{ fontSize: '9px', color: '#667eea', marginTop: '2px' }}>✓ Clique num horário</div>}
                               </div>
                             );
                           });
@@ -1047,7 +1045,6 @@ export function ProfessorDashboard() {
                                                   professor_id: clickedItem.professor_id,
                                                   subject_id: clickedItem.subject_id,
                                                   class_id: turma.id,
-                                                  classroom_id: 1,
                                                   turno_id: selectedTurno,
                                                   dia_semana: diaIdx,
                                                   slot: slot,
