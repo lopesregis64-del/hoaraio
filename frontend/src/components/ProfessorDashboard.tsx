@@ -523,9 +523,6 @@ export function ProfessorDashboard() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
 
   const handleDownloadExcel = async () => {
     if (!selectedTurno) return;
@@ -1068,15 +1065,6 @@ export function ProfessorDashboard() {
               </div>
             </div>
 
-            {/* Cabeçalho de Impressão (visível apenas na impressão) */}
-            <div className="print-report-header">
-              <h1>Relatório de Horários - E.E. Alcides Cesar Meneses</h1>
-              <div className="report-info">
-                <p><strong>Turno:</strong> {turnos.find(t => t.id === selectedTurno)?.nome}</p>
-                <p><strong>Data:</strong> {new Date().toLocaleDateString('pt-BR')}</p>
-                <p><strong>Responsável:</strong> {isAdmin ? 'Administração' : professores.find(p => p.id === professorId)?.nome}</p>
-              </div>
-            </div>
 
             {!selectedTurno ? (
               <p>Selecione um turno na aba "Minhas Disciplinas".</p>
