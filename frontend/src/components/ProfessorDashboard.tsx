@@ -745,9 +745,10 @@ export function ProfessorDashboard() {
       theme: 'grid',
       styles: {
         fontSize: 8,
-        cellPadding: 2,
+        cellPadding: 0.8,
         halign: 'center',
         valign: 'middle',
+        minCellHeight: 3,
         lineWidth: 0.1,
         lineColor: [0, 0, 0],
         textColor: [0, 0, 0],
