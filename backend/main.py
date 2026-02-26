@@ -202,13 +202,42 @@ async def create_professor(
     db.refresh(db_user)
     return db_user
 
-@app.get("/admin/professors", response_model=List[schemas.UserResponse])
+@app.get("/admin/professors", response_model=List[schemas.UserWithStats])
 async def read_professors(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.obter_usuario_admin)
 ):
-    """Listar todos os professores (apenas admin)"""
-    return db.query(models.User).filter(models.User.tipo == models.UserType.PROFESSOR).all()
+    """Listar todos os professores com estatísticas de aulas (apenas admin)"""
+    users = db.query(models.User).filter(models.User.tipo == models.UserType.PROFESSOR).all()
+    
+    results = []
+    for user in users:
+        # Buscar registro de professor
+        professor = db.query(models.Professor).filter(models.Professor.user_id == user.id).first()
+        
+        total = 0
+        alocadas = 0
+        
+        if professor:
+            # Somar aulas das disciplinas vinculadas
+            stats = db.query(
+                models.sqlalchemy.func.sum(models.ProfessorSubject.quantidade_aulas).label("total"),
+                models.sqlalchemy.func.sum(models.ProfessorSubject.aulas_alocadas).label("alocadas")
+            ).filter(models.ProfessorSubject.professor_id == professor.id).first()
+            
+            total = stats.total if stats and stats.total else 0
+            alocadas = stats.alocadas if stats and stats.alocadas else 0
+            
+        results.append({
+            "id": user.id,
+            "email": user.email,
+            "nome": user.nome,
+            "tipo": user.tipo,
+            "total_aulas": total,
+            "aulas_alocadas": alocadas
+        })
+        
+    return results
 
 @app.delete("/admin/professors/{professor_id}")
 async def delete_professor(

@@ -15,6 +15,8 @@ interface Professor {
   email: string;
   nome: string;
   tipo: string;
+  total_aulas: number;
+  aulas_alocadas: number;
 }
 
 interface Disciplina {
@@ -517,7 +519,12 @@ export function AdminDashboard() {
               <h3>Professores Cadastrados</h3>
               {professores.map((p) => (
                 <div key={p.id} className="item">
-                  <span><strong>{p.nome}</strong> - {p.email}</span>
+                  <div className="item-info">
+                    <strong>{p.nome}</strong> - {p.email}
+                    <div className="item-stats" style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+                      Aulas: {p.aulas_alocadas} alocadas / {p.total_aulas - p.aulas_alocadas} pendentes (Total: {p.total_aulas})
+                    </div>
+                  </div>
                   <button onClick={() => handleDeletar('professors', p.id)} className="delete-btn">Excluir</button>
                 </div>
               ))}

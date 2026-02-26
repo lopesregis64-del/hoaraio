@@ -31,6 +31,12 @@ class UserResponse(BaseModel):
     class Config:
         orm_mode = True
 
+class UserWithStats(UserResponse):
+    total_aulas: int = 0
+    aulas_alocadas: int = 0
+    class Config:
+        orm_mode = True
+
 # ===== PROFESSOR =====
 class ProfessorBase(BaseModel):
     nome: str
