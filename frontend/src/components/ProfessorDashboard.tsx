@@ -954,7 +954,7 @@ export function ProfessorDashboard() {
                                 renderRows.push(
                                   <tr key={`${diaIdx}-${slot}`} className={slot === 0 ? 'day-start' : ''}>
                                     {slot === 0 && (
-                                      <td className="day-cell sticky-left" rowSpan={SLOTS.length + 1}>
+                                      <td className={`day-cell sticky-left day-${diaIdx}`} rowSpan={SLOTS.length + 1}>
                                         <div className="day-stack">
                                           {diaNome.toUpperCase().split('').map((char, i) => (
                                             <div key={i}>{char}</div>
