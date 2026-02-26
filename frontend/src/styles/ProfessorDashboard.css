@@ -989,7 +989,7 @@ tr.day-start td {
   .schedule-table th,
   .schedule-table td {
     border: 0.75pt solid #000 !important;
-    padding: 4pt 3pt !important;
+    padding: 2pt 1pt !important;
     font-size: 9pt !important;
     text-align: center;
     vertical-align: middle;
@@ -1043,7 +1043,7 @@ tr.day-start td {
   .interval-row td {
     background-color: #f1f5f9 !important;
     font-weight: 900 !important;
-    height: 22pt !important;
+    height: 14pt !important;
     letter-spacing: 0.3em;
     font-size: 9pt !important;
     border-top: 1.5pt solid #000 !important;
