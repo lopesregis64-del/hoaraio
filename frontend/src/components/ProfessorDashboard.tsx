@@ -971,9 +971,7 @@ export function ProfessorDashboard() {
                                         .filter(a => professores.some(p => p.id === a.professor_id))
                                         .filter(a => a.dia_semana === diaIdx && a.slot === slot && a.class_id === turma.id);
 
-                                      const aula = allAllocationsInSlot.find(
-                                        (a) => !isAdmin || !filtroProfessorId || a.professor_id === filtroProfessorId
-                                      );
+                                      const aula = allAllocationsInSlot[0];
 
                                       const activeDrag = draggedItem || draggingFromGrid?.psItem;
                                       const activeDragClassId = activeDrag?.class_id;
@@ -1015,7 +1013,7 @@ export function ProfessorDashboard() {
                                         >
                                           {aula ? (
                                             <div
-                                              className={`aula-alocada-mini ${(!isAdmin && aula.professor_id !== professorId && (!filtroProfessorId || aula.professor_id !== filtroProfessorId)) ? 'aula-outra' : ''}`}
+                                              className={`aula-alocada-mini ${(!isAdmin && aula.professor_id !== professorId) || (isAdmin && filtroProfessorId && aula.professor_id !== filtroProfessorId) ? 'aula-outra' : ''}`}
                                               style={{
                                                 background: SUBJECT_COLORS[aula.subject_id % SUBJECT_COLORS.length],
                                                 boxShadow: `0 4px 6px -1px ${SUBJECT_COLORS[aula.subject_id % SUBJECT_COLORS.length]}33`,
