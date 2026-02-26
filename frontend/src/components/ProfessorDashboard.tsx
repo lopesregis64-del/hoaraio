@@ -932,6 +932,7 @@ export function ProfessorDashboard() {
                               const turnoNome = turnos.find((tr) => tr.id === selectedTurno)?.nome;
                               return t.turno === turnoNome;
                             })
+                            .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
                             .map((turma) => (
                               <th key={turma.id} style={{ width: '100px' }}>{turma.nome}</th>
                             ))}
@@ -939,10 +940,12 @@ export function ProfessorDashboard() {
                       </thead>
                       <tbody>
                         {DIAS.map((diaNome, diaIdx) => {
-                          const turmasDoTurno = turmas.filter((t) => {
-                            const turnoNome = turnos.find((tr) => tr.id === selectedTurno)?.nome;
-                            return t.turno === turnoNome;
-                          });
+                          const turmasDoTurno = turmas
+                            .filter((t) => {
+                              const turnoNome = turnos.find((tr) => tr.id === selectedTurno)?.nome;
+                              return t.turno === turnoNome;
+                            })
+                            .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
                           return (
                             <React.Fragment key={diaIdx}>
