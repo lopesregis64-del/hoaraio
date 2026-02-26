@@ -231,7 +231,7 @@ export function AdminDashboard() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('http://127.0.0.1:8001/admin/professors/import', {
+      const res = await fetch(`${API_URL}/admin/professors/import`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -269,7 +269,7 @@ export function AdminDashboard() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('http://127.0.0.1:8001/admin/professors/import-full', {
+      const res = await fetch(`${API_URL}/admin/professors/import-full`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,

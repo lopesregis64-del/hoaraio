@@ -11,7 +11,11 @@ services:
       - key: PYTHON_VERSION
         value: 3.10.0
       - key: CORS_ORIGINS
-        value: "https://horario-frontend.onrender.com" # Ajuste depois para a URL real do frontend
+        value: "https://onehorario-frontend.onrender.com" # Atualizado para a URL real
+      - key: DATABASE_URL # Garantindo que DATABASE_URL esteja aqui se necessário, mas mantendo o foco no CORS
+        fromDatabase:
+          name: horario-db
+          property: connectionString
 
   # FRONTEND - React (Vite)
   - type: web
@@ -21,9 +25,12 @@ services:
     plan: free
     buildCommand: "cd frontend && npm install && npm run build"
     staticPublishPath: "./frontend/dist"
+    routes:
+      - type: rewrite
+        source: "/*"
+        destination: "/index.html"
     envVars:
       - key: NODE_VERSION
         value: 18.17.0
-      # O Vite exige que as variáveis começem com VITE_ para irem pro build
       - key: VITE_API_URL
-        value: "https://horario-backend.onrender.com" # Ajuste depois para a URL real do backend
+        value: "https://horario-backend.onrender.com" # Verifique se esta URL é a do seu backend no Render
