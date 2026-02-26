@@ -817,7 +817,7 @@ export function ProfessorDashboard() {
 
             {/* Cabeçalho de Impressão (visível apenas na impressão) */}
             <div className="print-report-header">
-              <h1>Relatório de Horários - SchoolQuest</h1>
+              <h1>Relatório de Horários - E.E. Alcides Cesar Meneses</h1>
               <div className="report-info">
                 <p><strong>Turno:</strong> {turnos.find(t => t.id === selectedTurno)?.nome}</p>
                 <p><strong>Data:</strong> {new Date().toLocaleDateString('pt-BR')}</p>
