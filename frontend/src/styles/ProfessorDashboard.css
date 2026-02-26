@@ -801,6 +801,33 @@ tr.day-start td {
   }
 }
 
+/* Slot válido para clique */
+.click-valid-drop {
+  background-color: #eff6ff !important;
+  outline: 2px dashed #3b82f6 !important;
+  outline-offset: -2px;
+  cursor: pointer !important;
+  animation: pulse-blue 1s infinite;
+}
+
+@keyframes pulse-blue {
+
+  0%,
+  100% {
+    background-color: #eff6ff;
+  }
+
+  50% {
+    background-color: #dbeafe;
+  }
+}
+
+/* Slot inválido para clique (turma errada) */
+.click-invalid-drop {
+  background-color: #fef2f2 !important;
+  opacity: 0.55;
+}
+
 /* Drop target inválido durante arrasto */
 .invalid-drop {
   background-color: #fef2f2 !important;
