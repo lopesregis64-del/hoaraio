@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconn
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from sqlalchemy import func as sa_func
 from typing import List
 from datetime import timedelta
 import models, schemas, database, websocket_manager, auth, csv, io, os
@@ -221,8 +222,8 @@ async def read_professors(
         if professor:
             # Somar aulas das disciplinas vinculadas
             stats = db.query(
-                models.sqlalchemy.func.sum(models.ProfessorSubject.quantidade_aulas).label("total"),
-                models.sqlalchemy.func.sum(models.ProfessorSubject.aulas_alocadas).label("alocadas")
+                sa_func.sum(models.ProfessorSubject.quantidade_aulas).label("total"),
+                sa_func.sum(models.ProfessorSubject.aulas_alocadas).label("alocadas")
             ).filter(models.ProfessorSubject.professor_id == professor.id).first()
             
             total = stats.total if stats and stats.total else 0
