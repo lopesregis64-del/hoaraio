@@ -1162,7 +1162,7 @@ export function ProfessorDashboard() {
 
                   <div className="disciplinas-cards-container">
                     {professorSubjects
-                      .filter(ps => professores.some(p => p.id === ps.professor_id)) // Defensive check
+                      .filter(ps => professores.some(p => p.id === ps.professor_id))
                       .filter(ps => !isAdmin || !filtroProfessorId || ps.professor_id === filtroProfessorId)
                       .length === 0 ? (
                       <p className="empty-msg">Nenhuma disciplina adicionada.</p>
@@ -1170,22 +1170,38 @@ export function ProfessorDashboard() {
                       professorSubjects
                         .filter(ps => professores.some(p => p.id === ps.professor_id))
                         .filter(ps => !isAdmin || !filtroProfessorId || ps.professor_id === filtroProfessorId)
-                        .flatMap((ps) => {
-                          const numAlocadas = allocations.filter(a => a.professor_subject_id === ps.id).length;
+                        .map((ps) => {
+                          const numAlocadas = allocations.filter(a => Number(a.professor_subject_id) === Number(ps.id)).length;
                           const numRestantes = ps.quantidade_aulas - numAlocadas;
 
-                          return Array.from({ length: Math.max(0, numRestantes) }).map((_, idx) => (
-                            <div
-                              key={`${ps.id}-card-${idx}`}
-                              className="disciplina-card-mini"
-                              style={{ borderLeft: `4px solid ${SUBJECT_COLORS[ps.subject_id % SUBJECT_COLORS.length]}` }}
-                              draggable
-                              onDragStart={(e) => handleDragStart(e, ps)}
-                            >
-                              <div className="card-subject">{obterNomeDisciplina(ps.subject_id)}</div>
-                              <div className="card-class">{obterNomeTurma(ps.class_id)}</div>
+                          return (
+                            <div key={`group-${ps.id}`} className="disciplina-group-mini">
+                              <div className="disciplina-group-header">
+                                <span className={`count-badge ${numRestantes === 0 ? 'complete' : ''}`}>
+                                  {numRestantes === 0 ? '✓' : numRestantes}
+                                </span>
+                                <div className="group-info">
+                                  <strong>{obterNomeDisciplina(ps.subject_id)}</strong>
+                                  <span>{obterNomeTurma(ps.class_id)}</span>
+                                </div>
+                              </div>
+                              <div className="cards-row">
+                                {Array.from({ length: Math.max(0, numRestantes) }).map((_, idx) => (
+                                  <div
+                                    key={`${ps.id}-card-${idx}`}
+                                    className="disciplina-card-mini"
+                                    style={{ borderLeft: `4px solid ${SUBJECT_COLORS[ps.subject_id % SUBJECT_COLORS.length]}` }}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, ps)}
+                                    title={`Arraste para alocar (Faltam ${numRestantes})`}
+                                  >
+                                    ⠿
+                                  </div>
+                                ))}
+                                {numRestantes === 0 && <span className="complete-text">✅ Completa</span>}
+                              </div>
                             </div>
-                          ));
+                          );
                         })
                     )}
                   </div>
