@@ -664,14 +664,17 @@ export function ProfessorDashboard() {
     const turnoNome = turnos.find(t => t.id === selectedTurno)?.nome || '';
     const escolaNome = "E.E. Alcides Cesar Meneses";
 
-    // Cabeçalho institucional
-    doc.setFontSize(18);
+    // Cabeçalho institucional (MAIS PRÓXIMO DO TOPO)
+    doc.setFontSize(16);
     doc.setTextColor(30, 41, 59);
-    doc.text(`Relatório de Horários - ${escolaNome}`, doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+    doc.text(`Relatório de Horários - ${escolaNome}`, doc.internal.pageSize.getWidth() / 2, 10, { align: 'center' });
 
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setTextColor(71, 85, 105);
-    doc.text(`Turno: ${turnoNome}   |   Data de Geração: ${new Date().toLocaleDateString('pt-BR')}`, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
+    doc.text(`Turno: ${turnoNome}   |   Data: ${new Date().toLocaleDateString('pt-BR')}`, doc.internal.pageSize.getWidth() / 2, 16, { align: 'center' });
+
+    // Horários específicos solicitados
+    const morningTimes = ['7:00-7:45', '7:45-8:30', '8:30-9:15', '9:25-10:10', '10:10-10:55', '10:55-11:40'];
 
     // Filtrar e ORDENAR turmas do turno (A-Z)
     const turmasDoTurno = turmas
@@ -703,7 +706,7 @@ export function ProfessorDashboard() {
       SLOTS.forEach(slot => {
         const rowData = [
           slot === 0 ? dia : '',
-          `Aula ${slot + 1}`,
+          morningTimes[slot] || `Aula ${slot + 1}`,
           ...turmasDoTurno.map(turma => {
             const aula = allocations.find(a =>
               a.dia_semana === diaIdx &&
@@ -727,13 +730,13 @@ export function ProfessorDashboard() {
           })
         ];
 
-        // Atribuir cor do dia como metadado da linha (usaremos no didDrawCell para células vazias)
+        // Atribuir metadados da linha
         (rowData as any)._dayIdx = diaIdx;
         (rowData as any)._isInterval = false;
         body.push(rowData);
 
         if (slot === 2) {
-          const intervalCells = ['', 'INTERVALO', ...turmasDoTurno.map(() => 'PAUSA')];
+          const intervalCells = ['', '9:15-9:25', ...turmasDoTurno.map(() => 'PAUSA')];
           (intervalCells as any)._isInterval = true;
           body.push(intervalCells);
         }
@@ -741,7 +744,7 @@ export function ProfessorDashboard() {
     });
 
     autoTable(doc, {
-      startY: 30,
+      startY: 22, // MAIS PRÓXIMO DO CABEÇALHO
       head: [['Dia', 'Horário', ...turmasDoTurno.map(t => t.nome)]],
       body: body,
       theme: 'grid',
@@ -763,7 +766,7 @@ export function ProfessorDashboard() {
       },
       columnStyles: {
         0: { fontStyle: 'bold', cellWidth: 15 },
-        1: { fontStyle: 'bold', cellWidth: 20 },
+        1: { fontStyle: 'bold', cellWidth: 25 }, // UM POUCO MAIS LARGO PARA OS HORÁRIOS
       },
       didParseCell: (data) => {
         if (data.section === 'body') {
@@ -774,10 +777,12 @@ export function ProfessorDashboard() {
             data.cell.styles.fillColor = [241, 245, 249];
             data.cell.styles.fontStyle = 'bolditalic';
           } else if (cellData && typeof cellData === 'object' && cellData._isAula) {
+            // Se for uma aula, usar a cor da disciplina e texto branco
             data.cell.styles.fillColor = cellData._color;
             data.cell.styles.textColor = [255, 255, 255];
             data.cell.styles.fontStyle = 'bold';
           } else {
+            // Células vazias, Dia e Horário recebem a cor do dia
             const dayIdx = rowData._dayIdx;
             if (dayIdx !== undefined && DAY_COLORS_RGB[dayIdx]) {
               data.cell.styles.fillColor = DAY_COLORS_RGB[dayIdx] as [number, number, number];
@@ -785,7 +790,7 @@ export function ProfessorDashboard() {
           }
         }
       },
-      margin: { top: 30, left: 10, right: 10, bottom: 10 },
+      margin: { top: 22, left: 10, right: 10, bottom: 10 },
     });
 
     doc.save(`Horario_${turnoNome}_${new Date().toISOString().split('T')[0]}.pdf`);
