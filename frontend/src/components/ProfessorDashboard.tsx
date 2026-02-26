@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 import '../styles/ProfessorDashboard.css';
 
 interface Turno {
@@ -523,6 +525,134 @@ export function ProfessorDashboard() {
     window.print();
   };
 
+  const handleDownloadExcel = async () => {
+    if (!selectedTurno) return;
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Grade de Horários');
+
+    const turnoNome = turnos.find(t => t.id === selectedTurno)?.nome || '';
+    const escolaNome = "E.E. Alcides Cesar Meneses";
+
+    // Estilo para o cabeçalho principal
+    worksheet.mergeCells('A1:G1');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = `Relatório de Horários - ${escolaNome}`;
+    titleCell.font = { size: 16, bold: true };
+    titleCell.alignment = { horizontal: 'center' };
+
+    worksheet.mergeCells('A2:G2');
+    const infoCell = worksheet.getCell('A2');
+    infoCell.value = `Turno: ${turnoNome} | Integrado em: ${new Date().toLocaleDateString('pt-BR')}`;
+    infoCell.font = { size: 12 };
+    infoCell.alignment = { horizontal: 'center' };
+
+    worksheet.addRow([]); // Espaço
+
+    // Cabeçalho da Tabela
+    const turmasDoTurno = turmas.filter(t => {
+      const tId = Number(t.id);
+      return !isNaN(tId) && (t.turno === String(selectedTurno) || t.turno === turnoNome);
+    });
+
+    const header = ['Dia', 'Aula', ...turmasDoTurno.map(t => t.nome)];
+    const headerRow = worksheet.addRow(header);
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE2E8F0' }
+      };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    });
+
+    // Cores dos Dias (Hex sem o #)
+    const DAY_COLORS = [
+      'BFDBFE', // Seg
+      'FBCFE8', // Ter
+      'BBF7D0', // Qua
+      'FDE68A', // Qui
+      'E9D5FF'  // Sex
+    ];
+
+    DIAS.forEach((dia, diaIdx) => {
+      SLOTS.forEach(slot => {
+        const rowData = [
+          slot === 0 ? dia : '',
+          `Aula ${slot + 1}`,
+          ...turmasDoTurno.map(turma => {
+            const aula = allocations.find(a =>
+              a.dia_semana === diaIdx &&
+              a.slot === slot &&
+              a.class_id === turma.id
+            );
+            if (!aula) return '';
+            const discNome = obterNomeDisciplina(aula.subject_id);
+            const profObj = professores.find(p => p.id === aula.professor_id);
+            const profAbrev = profObj ? abreviarNome(profObj.nome) : '';
+            return `${abreviarDisciplina(discNome)}-${profAbrev}`;
+          })
+        ];
+
+        const row = worksheet.addRow(rowData);
+
+        // Estilização das células do dia
+        row.eachCell((cell, colNumber) => {
+          cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+
+          // Cor de fundo baseada no dia
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF' + DAY_COLORS[diaIdx] }
+          };
+
+          if (colNumber <= 2) {
+            cell.font = { bold: true };
+          }
+        });
+
+        // Inserir Intervalo
+        if (slot === 2) {
+          const intervalRow = worksheet.addRow(['', 'INTERVALO', ...turmasDoTurno.map(() => 'PAUSA')]);
+          intervalRow.eachCell((cell) => {
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFF1F5F9' }
+            };
+            cell.font = { italic: true, bold: true };
+            cell.border = {
+              top: { style: 'thin' },
+              left: { style: 'thin' },
+              bottom: { style: 'thin' },
+              right: { style: 'thin' }
+            };
+          });
+        }
+      });
+    });
+
+    // Ajustar largura das colunas
+    worksheet.columns.forEach((column, i) => {
+      column.width = i === 1 ? 20 : 15;
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `Grade_Horarios_${turnoNome}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
   const handleRemoverSubject = async (psId: number) => {
     if (!window.confirm('Excluir esta disciplina e todas as suas alocações na grade?')) return;
     try {
@@ -810,9 +940,14 @@ export function ProfessorDashboard() {
           <div className="tab-content">
             <div className="tab-header-flex">
               <h2>Grade de Horários</h2>
-              <button onClick={handlePrint} className="print-btn no-print">
-                🖨️ Imprimir Horário
-              </button>
+              <div className="tab-header-btns">
+                <button onClick={handleDownloadExcel} className="print-btn no-print" style={{ marginRight: '10px', background: '#10b981', color: 'white', borderColor: '#059669' }}>
+                  📊 Baixar Excel
+                </button>
+                <button onClick={handlePrint} className="print-btn no-print">
+                  🖨️ Imprimir Horário
+                </button>
+              </div>
             </div>
 
             {/* Cabeçalho de Impressão (visível apenas na impressão) */}
