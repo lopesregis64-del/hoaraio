@@ -690,6 +690,13 @@ export function ProfessorDashboard() {
       [233, 213, 255]  // Sex (Purple-200)
     ];
 
+    const hexToRgb = (hex: string): [number, number, number] => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return [r, g, b];
+    };
+
     DIAS.forEach((dia, diaIdx) => {
       SLOTS.forEach(slot => {
         const rowData = [
@@ -701,23 +708,32 @@ export function ProfessorDashboard() {
               a.slot === slot &&
               a.class_id === turma.id
             );
-            if (!aula) return '';
+            if (!aula) return { content: '', _isAula: false };
             const discNome = obterNomeDisciplina(aula.subject_id);
             const profObj = professores.find(p => p.id === aula.professor_id);
             const profAbrev = profObj ? abreviarNome(profObj.nome) : '';
-            return `${abreviarDisciplina(discNome)}-${profAbrev}`;
+
+            // Cor da disciplina
+            const colorHex = SUBJECT_COLORS[aula.subject_id % SUBJECT_COLORS.length];
+            const colorRgb = hexToRgb(colorHex);
+
+            return {
+              content: `${abreviarDisciplina(discNome)}-${profAbrev}`,
+              _isAula: true,
+              _color: colorRgb
+            };
           })
         ];
 
-        // Atribuir cor do dia como metadado da linha (usaremos no didDrawCell)
+        // Atribuir cor do dia como metadado da linha (usaremos no didDrawCell para células vazias)
         (rowData as any)._dayIdx = diaIdx;
         (rowData as any)._isInterval = false;
         body.push(rowData);
 
         if (slot === 2) {
-          const intervalRow = ['', 'INTERVALO', ...turmasDoTurno.map(() => 'PAUSA')];
-          (intervalRow as any)._isInterval = true;
-          body.push(intervalRow);
+          const intervalCells = ['', 'INTERVALO', ...turmasDoTurno.map(() => 'PAUSA')];
+          (intervalCells as any)._isInterval = true;
+          body.push(intervalCells);
         }
       });
     });
@@ -747,14 +763,20 @@ export function ProfessorDashboard() {
         1: { fontStyle: 'bold', cellWidth: 20 },
       },
       didDrawCell: (data) => {
-        // Se for corpo da tabela (não cabeçalho)
         if (data.section === 'body') {
           const rowData = data.row.raw as any;
+          const cellData = data.cell.raw as any;
 
           if (rowData._isInterval) {
             data.cell.styles.fillColor = [241, 245, 249];
             data.cell.styles.fontStyle = 'bolditalic';
+          } else if (cellData && cellData._isAula) {
+            // Se for uma aula, usar a cor da disciplina e texto branco
+            data.cell.styles.fillColor = cellData._color;
+            data.cell.styles.textColor = [255, 255, 255]; // Texto branco para contraste
+            data.cell.styles.fontStyle = 'bold';
           } else {
+            // Se não for aula, usar a cor do dia
             const dayIdx = rowData._dayIdx;
             if (dayIdx !== undefined && DAY_COLORS_RGB[dayIdx]) {
               data.cell.styles.fillColor = DAY_COLORS_RGB[dayIdx] as any;
