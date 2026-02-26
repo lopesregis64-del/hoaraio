@@ -1084,11 +1084,11 @@ export function ProfessorDashboard() {
             <div className="tab-header-flex">
               <h2>Grade de Horários</h2>
               <div className="tab-header-btns">
-                <button onClick={handleDownloadExcel} className="print-btn no-print" style={{ marginRight: '10px', background: '#10b981', color: 'white', borderColor: '#059669' }}>
-                  📊 Excel
+                <button onClick={handleDownloadExcel} className="print-btn no-print export-excel-btn">
+                  📊 Baixar Horário Excel
                 </button>
-                <button onClick={handleDownloadPDF} className="print-btn no-print" style={{ background: '#ef4444', color: 'white', borderColor: '#dc2626' }}>
-                  📄 PDF Profissional
+                <button onClick={handleDownloadPDF} className="print-btn no-print export-pdf-btn">
+                  📄 Baixar Horário PDF
                 </button>
               </div>
             </div>
