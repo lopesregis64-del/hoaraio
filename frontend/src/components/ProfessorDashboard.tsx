@@ -91,7 +91,6 @@ export function ProfessorDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [draggedItem, setDraggedItem] = useState<any>(null);
-  const [clickedItem, setClickedItem] = useState<ProfessorSubject | null>(null);
   const [professorId, setProfessorId] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [filtroProfessorId, setFiltroProfessorId] = useState<number | null>(null);
@@ -901,27 +900,18 @@ export function ProfessorDashboard() {
                           const numAlocadas = allocations.filter(a => a.professor_subject_id === ps.id).length;
                           const numRestantes = ps.quantidade_aulas - numAlocadas;
 
-                          return Array.from({ length: Math.max(0, numRestantes) }).map((_, idx) => {
-                            const isSelected = clickedItem?.id === ps.id;
-                            return (
-                              <div
-                                key={`${ps.id}-card-${idx}`}
-                                className={`disciplina-card-mini${isSelected ? ' card-selecionado' : ''}`}
-                                style={{
-                                  borderLeft: `4px solid ${SUBJECT_COLORS[ps.subject_id % SUBJECT_COLORS.length]}`,
-                                  outline: isSelected ? `2px solid ${SUBJECT_COLORS[ps.subject_id % SUBJECT_COLORS.length]}` : 'none',
-                                  cursor: 'pointer',
-                                }}
-                                draggable
-                                onDragStart={(e) => handleDragStart(e, ps)}
-                                onClick={() => setClickedItem(isSelected ? null : ps)}
-                              >
-                                <div className="card-subject">{obterNomeDisciplina(ps.subject_id)}</div>
-                                <div className="card-class">{obterNomeTurma(ps.class_id)}</div>
-                                {isSelected && idx === 0 && <div style={{ fontSize: '9px', color: '#667eea', marginTop: '2px' }}>✓ Clique num horário</div>}
-                              </div>
-                            );
-                          });
+                          return Array.from({ length: Math.max(0, numRestantes) }).map((_, idx) => (
+                            <div
+                              key={`${ps.id}-card-${idx}`}
+                              className="disciplina-card-mini"
+                              style={{ borderLeft: `4px solid ${SUBJECT_COLORS[ps.subject_id % SUBJECT_COLORS.length]}` }}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, ps)}
+                            >
+                              <div className="card-subject">{obterNomeDisciplina(ps.subject_id)}</div>
+                              <div className="card-class">{obterNomeTurma(ps.class_id)}</div>
+                            </div>
+                          ));
                         })
                     )}
                   </div>
@@ -1013,8 +1003,6 @@ export function ProfessorDashboard() {
                                             ${!dropInvalido && professorJaOcupado ? 'prof-busy-elsewhere' : ''}
                                             ${!dropInvalido && !professorJaOcupado && classeOcupada ? 'class-occupied' : ''}
                                             ${dropValido ? 'valid-drop' : ''}
-                                            ${clickedItem && clickedItem.class_id === turma.id && !aula && !professorJaOcupado ? 'click-valid-drop' : ''}
-                                            ${clickedItem && clickedItem.class_id !== turma.id ? 'click-invalid-drop' : ''}
                                           `}
                                           onDragOver={handleDragOver}
                                           onDrop={(e) => {
@@ -1023,46 +1011,6 @@ export function ProfessorDashboard() {
                                               return;
                                             }
                                             handleDropSpreadsheet(e, diaIdx, slot, turma.id);
-                                          }}
-                                          onClick={async () => {
-                                            if (!clickedItem) return;
-                                            if (clickedItem.class_id !== turma.id) {
-                                              setError(`Esta disciplina pertence à turma ${obterNomeTurma(clickedItem.class_id)}`);
-                                              return;
-                                            }
-                                            if (aula) return; // slot ocupado
-                                            if (professorJaOcupado) {
-                                              setError('Você já possui aula neste horário em outra turma');
-                                              return;
-                                            }
-                                            // Alocar via clique
-                                            try {
-                                              const res = await fetchAutenticado('/professor/allocations', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({
-                                                  professor_subject_id: clickedItem.id,
-                                                  professor_id: clickedItem.professor_id,
-                                                  subject_id: clickedItem.subject_id,
-                                                  class_id: turma.id,
-                                                  turno_id: selectedTurno,
-                                                  dia_semana: diaIdx,
-                                                  slot: slot,
-                                                }),
-                                              });
-                                              if (res.ok) {
-                                                const data = await res.json();
-                                                setAllocations(prev => [...prev, data]);
-                                                setClickedItem(null);
-                                                setError('');
-                                                carregarDisciplinasDoTurno(selectedTurno!);
-                                              } else {
-                                                const errData = await res.json();
-                                                setError(errData.detail || 'Erro ao alocar aula');
-                                              }
-                                            } catch {
-                                              setError('Erro ao alocar aula');
-                                            }
                                           }}
                                         >
                                           {aula ? (
