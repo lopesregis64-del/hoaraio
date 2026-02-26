@@ -1,7 +1,7 @@
 services:
-  # BACKEND - FastAPI
+  # BACKEND - FastAPI (Note: Currently named horario-frontend in Render)
   - type: web
-    name: horario-backend
+    name: horario-frontend
     env: python
     region: ohio
     plan: free
@@ -11,15 +11,15 @@ services:
       - key: PYTHON_VERSION
         value: 3.10.0
       - key: CORS_ORIGINS
-        value: "https://onehorario-frontend.onrender.com" # Atualizado para a URL real
-      - key: DATABASE_URL # Garantindo que DATABASE_URL esteja aqui se necessário, mas mantendo o foco no CORS
+        value: "https://onehorario-frontend.onrender.com"
+      - key: DATABASE_URL
         fromDatabase:
           name: horario-db
           property: connectionString
 
-  # FRONTEND - React (Vite)
+  # FRONTEND - React (Vite) (Note: Currently named onehorario-frontend in Render)
   - type: web
-    name: horario-frontend
+    name: onehorario-frontend
     env: static
     region: ohio
     plan: free
@@ -33,4 +33,4 @@ services:
       - key: NODE_VERSION
         value: 18.17.0
       - key: VITE_API_URL
-        value: "https://horario-backend.onrender.com" # Verifique se esta URL é a do seu backend no Render
+        value: "https://horario-frontend.onrender.com"
