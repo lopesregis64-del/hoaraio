@@ -10,9 +10,6 @@ interface LoginProps {
 export function Login({ onLoginSuccess }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [nome, setNome] = useState('');
-  const [tipo, setTipo] = useState<'admin' | 'professor'>('professor');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -65,41 +62,6 @@ export function Login({ onLoginSuccess }: LoginProps) {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const response = await fetch(`${API_URL}/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          nome,
-          senha: password,
-          tipo,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao criar conta');
-      }
-
-      setIsSignUp(false);
-      setError('');
-      setEmail('');
-      setPassword('');
-      setNome('');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar conta');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="login-container">
       <div className="login-box">
@@ -107,84 +69,29 @@ export function Login({ onLoginSuccess }: LoginProps) {
 
         {error && <div className="error-message">{error}</div>}
 
-        {isSignUp ? (
-          <form onSubmit={handleSignUp}>
-            <h2>Criar Nova Conta</h2>
+        <form onSubmit={handleLogin}>
+          <h2>Login</h2>
 
-            <input
-              type="text"
-              placeholder="Nome"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              required
-            />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+          <input
+            type="password"
+            placeholder="Senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
 
-            <input
-              type="password"
-              placeholder="Senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-
-            <select value={tipo} onChange={(e) => setTipo(e.target.value as 'admin' | 'professor')}>
-              <option value="professor">Professor</option>
-              <option value="admin">Administrador</option>
-            </select>
-
-            <button type="submit" disabled={loading}>
-              {loading ? 'Criando...' : 'Criar Conta'}
-            </button>
-
-            <button
-              type="button"
-              className="toggle-btn"
-              onClick={() => setIsSignUp(false)}
-            >
-              Já tem conta? Faça login
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleLogin}>
-            <h2>Login</h2>
-
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-
-            <input
-              type="password"
-              placeholder="Senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-
-            <button type="submit" disabled={loading}>
-              {loading ? 'Entrando...' : 'Entrar'}
-            </button>
-
-            <button
-              type="button"
-              className="toggle-btn"
-              onClick={() => setIsSignUp(true)}
-            >
-              Não tem conta? Cadastre-se aqui
-            </button>
-          </form>
-        )}
+          <button type="submit" disabled={loading}>
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
+        </form>
 
         <div className="login-footer">
           <p>E.E. Alcides Cesar Meneses</p>
