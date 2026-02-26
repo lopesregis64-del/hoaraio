@@ -594,31 +594,31 @@ thead .sticky-left-2 {
 }
 
 .day-0 {
-  background: #eff6ff !important;
+  background: #bfdbfe !important;
   color: #1e40af !important;
 }
 
 /* Blue - Seg */
 .day-1 {
-  background: #fdf2f8 !important;
+  background: #fbcfe8 !important;
   color: #9d174d !important;
 }
 
 /* Pink - Ter */
 .day-2 {
-  background: #f0fdf4 !important;
+  background: #bbf7d0 !important;
   color: #166534 !important;
 }
 
 /* Green - Qua */
 .day-3 {
-  background: #fffbeb !important;
+  background: #fde68a !important;
   color: #92400e !important;
 }
 
 /* Amber - Qui */
 .day-4 {
-  background: #faf5ff !important;
+  background: #e9d5ff !important;
   color: #6b21a8 !important;
 }
 
@@ -641,7 +641,6 @@ thead .sticky-left-2 {
 .time-cell {
   font-weight: 600;
   color: #1e293b;
-  background: #fff;
   font-size: 12px;
 }
 

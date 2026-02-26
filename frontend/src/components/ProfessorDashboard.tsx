@@ -963,7 +963,7 @@ export function ProfessorDashboard() {
                                       </td>
                                     )}
 
-                                    <td className="time-cell sticky-left-2">
+                                    <td className={`time-cell sticky-left-2 day-${diaIdx}`}>
                                       Aula {slot + 1}
                                     </td>
 
@@ -1068,7 +1068,7 @@ export function ProfessorDashboard() {
                                 if (slot === 2) {
                                   renderRows.push(
                                     <tr key={`${diaIdx}-interval`} className="interval-row">
-                                      <td className="time-cell sticky-left-2">INTERVALO</td>
+                                      <td className={`time-cell sticky-left-2 day-${diaIdx}`}>INTERVALO</td>
                                       <td colSpan={turmasDoTurno.length} className="interval-cell text-center">
                                         PAUSA
                                       </td>
