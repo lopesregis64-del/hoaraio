@@ -910,10 +910,16 @@ tr.day-start td {
 @media print {
   @page {
     size: A4 landscape;
-    margin: 2mm;
+    margin: 10mm;
   }
 
-  /* Hide regular UI */
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  }
+
+  /* Ocultar elementos desnecessários */
   .no-print,
   .prof-header,
   .prof-tabs,
@@ -921,56 +927,127 @@ tr.day-start td {
   .turno-selector,
   .turno-selector-inline,
   .grade-header-info,
-  form,
-  .disciplinas-list,
+  .logout-btn,
+  .footer-custom,
   .print-btn,
   .remove-btn-mini,
   .hint,
   .tab-header-flex,
-  .logout-btn,
-  .footer-custom {
+  form {
     display: none !important;
   }
 
-  /* ... outros estilos ... */
+  .professor-dashboard,
+  .prof-content,
+  .tab-content {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    max-width: none !important;
+    width: 100% !important;
+    border: none !important;
+  }
 
-  .schedule-table thead th,
-  .schedule-table tbody td {
-    border: 1px solid #000 !important;
+  .print-report-header {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 25px;
+    padding-bottom: 12px;
+    border-bottom: 2pt solid #000;
+  }
+
+  .print-report-header h1 {
+    font-size: 22pt;
+    font-weight: 800;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  .report-info {
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    font-size: 12pt;
+    font-weight: 500;
+  }
+
+  .grade-wrapper {
+    width: 100% !important;
+    margin-top: 15px;
+  }
+
+
+  .schedule-table {
+    width: 100% !important;
+    table-layout: fixed;
+    border-collapse: collapse !important;
+    border: 2pt solid #000 !important;
+  }
+
+  .schedule-table th,
+  .schedule-table td {
+    border: 0.75pt solid #000 !important;
+    padding: 6pt 4pt !important;
+    font-size: 11.5pt !important;
+    text-align: center;
+    vertical-align: middle;
     color: #000 !important;
-    font-size: 12px !important;
-    padding: 3px 2px !important;
-    height: auto !important;
-    min-height: 40px;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    overflow: hidden;
+  }
+
+  .schedule-table thead th {
+    background-color: #f1f5f9 !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
   }
 
   .day-cell {
-    width: 35px !important;
+    background-color: #f8fafc !important;
+    width: 45pt !important;
+    font-weight: 900 !important;
+    border-right: 1.5pt solid #000 !important;
   }
 
   .time-cell {
-    width: 80px !important;
+    background-color: #f8fafc !important;
+    width: 90pt !important;
+    font-weight: 800 !important;
+    border-right: 1.5pt solid #000 !important;
   }
 
-  /* ... sticky ... */
+  .sticky-left, .sticky-left-2 {
+    position: static !important;
+  }
+
+  .aula-alocada-mini {
+    background: #fff !important;
+    border: 0.75pt solid #000 !important;
+    padding: 5pt !important;
+    border-radius: 5pt !important;
+    min-height: 45pt;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
 
   .aula-text-compact {
-    color: #000 !important;
-    font-size: 12px !important;
+    font-size: 11.5pt !important;
+    font-weight: 800 !important;
     line-height: 1.2;
-    font-weight: bold !important;
+    color: #000 !important;
   }
 
   .interval-row td {
-    background: #f8fafc !important;
-    color: #1e293b !important;
-    border: 1px solid #000 !important;
-    font-weight: bold !important;
-    height: 18px !important;
-    font-size: 8px !important;
+    background-color: #f1f5f9 !important;
+    font-weight: 900 !important;
+    height: 28pt !important;
+    letter-spacing: 0.5em;
+    font-size: 11.5pt !important;
+    border-top: 1.5pt solid #000 !important;
+    border-bottom: 1.5pt solid #000 !important;
   }
 
   .busy-elsewhere-indicator {
