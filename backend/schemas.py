@@ -29,7 +29,7 @@ class UserResponse(BaseModel):
     nome: str
     tipo: UserType
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # ===== PROFESSOR =====
 class ProfessorBase(BaseModel):
@@ -43,7 +43,7 @@ class Professor(ProfessorBase):
     id: int
     user_tipo: Optional[str] = None
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # ===== TURNOS =====
 class TurnoBase(BaseModel):
@@ -57,7 +57,7 @@ class TurnoCreate(TurnoBase):
 class Turno(TurnoBase):
     id: int
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # ===== DISCIPLINA =====
 class SubjectBase(BaseModel):
@@ -66,7 +66,7 @@ class SubjectBase(BaseModel):
 class Subject(SubjectBase):
     id: int
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # ===== SALA =====
 class ClassRoomBase(BaseModel):
@@ -75,7 +75,7 @@ class ClassRoomBase(BaseModel):
 class ClassRoom(ClassRoomBase):
     id: int
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # ===== TURMA =====
 class SchoolClassBase(BaseModel):
@@ -85,7 +85,7 @@ class SchoolClassBase(BaseModel):
 class SchoolClass(SchoolClassBase):
     id: int
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # ===== DISCIPLINAS DO PROFESSOR =====
 class ProfessorSubjectBase(BaseModel):
@@ -105,7 +105,7 @@ class ProfessorSubject(ProfessorSubjectBase):
     professor_id: int
     aulas_alocadas: int
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 # ===== ALOCAÇÃO DE AULAS =====
 class AllocationBase(BaseModel):
@@ -124,4 +124,4 @@ class Allocation(AllocationBase):
     id: int
     professor_subject_id: int
     class Config:
-        from_attributes = True
+        orm_mode = True
