@@ -114,8 +114,9 @@ export function ProfessorDashboard() {
         }
       });
       if (res.status === 401) {
+        console.warn('Sessão expirada ou inválida. Redirecionando para login...');
         logout();
-        navigate('/');
+        navigate('/', { state: { error: 'Sua sessão expirou. Por favor, faça login novamente.' } });
       }
       return res;
     } catch (err) {
