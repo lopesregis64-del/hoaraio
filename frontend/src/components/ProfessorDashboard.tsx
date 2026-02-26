@@ -101,6 +101,14 @@ export function ProfessorDashboard() {
   const [editandoSubject, setEditandoSubject] = useState<{ id: number; quantidade_aulas: number } | null>(null);
   const [draggingFromGrid, setDraggingFromGrid] = useState<{ allocationId: number; psItem: ProfessorSubject } | null>(null);
 
+  const obterNomeDisciplina = (id: number) => {
+    return disciplinas.find((d) => d.id === id)?.nome || '';
+  };
+
+  const obterNomeTurma = (id: number) => {
+    return turmas.find((t) => t.id === id)?.nome || '';
+  };
+
   // API Base URL for both local dev and Render deploy
   const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001';
 
@@ -427,31 +435,23 @@ export function ProfessorDashboard() {
       }
 
       try {
-        // Deletar alocação antiga
-        await fetchAutenticado(`/professor/allocations/${allocationId}`, { method: 'DELETE' });
-        // Criar nova alocação no novo slot
-        const res = await fetchAutenticado('/professor/allocations', {
+        const res = await fetchAutenticado('/professor/allocations/move', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            professor_subject_id: psItem.id,
-            professor_id: psItem.professor_id,
-            subject_id: psItem.subject_id,
-            class_id: classId,
-            turno_id: selectedTurno,
+            allocation_id: allocationId,
             dia_semana: dia,
             slot: slot,
           }),
         });
         if (res.ok) {
-          const newAlloc = await res.json();
-          setAllocations(prev => [...prev.filter(a => a.id !== allocationId), newAlloc]);
+          const updatedAlloc = await res.json();
+          setAllocations(prev => [...prev.filter(a => a.id !== allocationId), updatedAlloc]);
           setError('');
           carregarDisciplinasDoTurno(selectedTurno!);
         } else {
           const errData = await res.json();
           setError(errData.detail || 'Erro ao mover aula');
-          // Recarregar para mostrar estado consistente
           carregarAlocacoes(selectedTurno!);
         }
       } catch (err) {
@@ -849,13 +849,6 @@ export function ProfessorDashboard() {
     }
   };
 
-  const obterNomeDisciplina = (id: number) => {
-    return disciplinas.find((d) => d.id === id)?.nome || '';
-  };
-
-  const obterNomeTurma = (id: number) => {
-    return turmas.find((t) => t.id === id)?.nome || '';
-  };
 
   const handleLogout = () => {
     logout();

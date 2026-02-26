@@ -132,6 +132,11 @@ class Allocation(AllocationBase):
     class Config:
         orm_mode = True
 
+class AllocationMove(BaseModel):
+    allocation_id: int
+    dia_semana: int
+    slot: int
+
 # ===== LOGS DE AUDITORIA =====
 class AuditLog(BaseModel):
     id: int

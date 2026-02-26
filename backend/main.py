@@ -990,6 +990,76 @@ async def delete_allocation(
     
     return {"message": "Alocação removida"}
 
+@app.post("/professor/allocations/move", response_model=schemas.Allocation)
+async def move_allocation(
+    move_request: schemas.AllocationMove,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.obter_usuario_gerenciador)
+):
+    """Mover alocação para novo slot com log detalhado"""
+    db_allocation = db.query(models.Allocation).filter(models.Allocation.id == move_request.allocation_id).first()
+    if not db_allocation:
+        raise HTTPException(status_code=404, detail="Alocação não encontrada")
+    
+    # Validar permissão (se não for Admin)
+    if current_user.tipo != models.UserType.ADMIN:
+        professor = db.query(models.Professor).filter(models.Professor.user_id == current_user.id).first()
+        if not professor or db_allocation.professor_id != professor.id:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+
+    # Guardar dados de origem
+    old_dia = db_allocation.dia_semana
+    old_slot = db_allocation.slot
+    
+    # 1. Verificar conflito de turma no novo horário (exceto ela mesma, mas como vamos deletar depois, melhor verificar agora excluindo o ID atual)
+    class_conflict = db.query(models.Allocation).filter(
+        models.Allocation.class_id == db_allocation.class_id,
+        models.Allocation.dia_semana == move_request.dia_semana,
+        models.Allocation.slot == move_request.slot,
+        models.Allocation.turno_id == db_allocation.turno_id,
+        models.Allocation.id != db_allocation.id
+    ).first()
+    if class_conflict:
+        raise HTTPException(status_code=409, detail="Turma já possui aula neste horário")
+
+    # 2. Verificar conflito de professor
+    prof_conflict = db.query(models.Allocation).filter(
+        models.Allocation.professor_id == db_allocation.professor_id,
+        models.Allocation.dia_semana == move_request.dia_semana,
+        models.Allocation.slot == move_request.slot,
+        models.Allocation.turno_id == db_allocation.turno_id,
+        models.Allocation.id != db_allocation.id
+    ).first()
+    if prof_conflict:
+        raise HTTPException(status_code=409, detail="Professor já possui aula neste horário")
+
+    # Capturar nomes para o log
+    sub_nome = db.query(models.Subject).filter(models.Subject.id == db_allocation.subject_id).first().nome
+    class_nome = db.query(models.SchoolClass).filter(models.SchoolClass.id == db_allocation.class_id).first().nome
+    
+    DIAS_NOMES = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"]
+    origem_txt = f"{DIAS_NOMES[old_dia]} ({old_slot + 1}º hor.)"
+    dest_txt = f"{DIAS_NOMES[move_request.dia_semana]} ({move_request.slot + 1}º hor.)"
+    detalhe = f"{sub_nome} movida na turma {class_nome} de {origem_txt} para {dest_txt}"
+
+    # Atualizar dados da alocação
+    db_allocation.dia_semana = move_request.dia_semana
+    db_allocation.slot = move_request.slot
+    
+    db.commit()
+    db.refresh(db_allocation)
+    
+    # Registrar log unico de movimentação
+    await record_audit_log(db, current_user, "Movimentação", detalhe)
+
+    # Broadcast
+    await manager.broadcast({
+        "type": "new_allocation", # Reusamos o tipo para forçar atualização no front
+        "data": schemas.Allocation.from_orm(db_allocation).dict()
+    })
+    
+    return db_allocation
+
 # --- WEBSOCKET ---
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
