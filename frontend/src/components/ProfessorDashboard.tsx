@@ -865,7 +865,14 @@ export function ProfessorDashboard() {
   return (
     <div className="professor-dashboard">
       <header className="prof-header">
-        <h1>Dashboard do Professor</h1>
+        <div className="header-left">
+          <h1>Dashboard de Horários</h1>
+          {isAdmin && (
+            <button onClick={() => navigate('/admin')} className="admin-back-btn">
+              ⚙️ Painel Administrativo
+            </button>
+          )}
+        </div>
         <button onClick={handleLogout} className="logout-btn">
           Sair
         </button>
