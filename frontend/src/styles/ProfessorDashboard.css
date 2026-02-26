@@ -920,6 +920,7 @@ tr.day-start td {
   .disciplinas-top-panel,
   .turno-selector,
   .turno-selector-inline,
+  .grade-header-info,
   form,
   .disciplinas-list,
   .print-btn,
@@ -931,96 +932,36 @@ tr.day-start td {
     display: none !important;
   }
 
-  .professor-dashboard {
-    background: white !important;
-    padding: 0 !important;
-    min-height: auto !important;
-  }
-
-  .prof-content {
-    padding: 0 !important;
-    max-width: none !important;
-    margin: 0 !important;
-  }
-
-  .tab-content {
-    box-shadow: none !important;
-    padding: 0 !important;
-    border: none !important;
-  }
-
-  .print-report-header {
-    display: block !important;
-    margin-bottom: 10px;
-    border-bottom: 2px solid #334155;
-    padding-bottom: 5px;
-    text-align: left;
-  }
-
-  .print-report-header h1 {
-    font-size: 18px;
-    color: #1e293b;
-    margin: 0 0 5px 0;
-  }
-
-  .report-info {
-    display: flex;
-    gap: 30px;
-    font-size: 11px;
-    color: #334155;
-  }
-
-  .schedule-table {
-    width: 100% !important;
-    min-width: 0 !important;
-    table-layout: fixed !important;
-    border: 1px solid #000 !important;
-    border-collapse: collapse !important;
-  }
+  /* ... outros estilos ... */
 
   .schedule-table thead th,
   .schedule-table tbody td {
     border: 1px solid #000 !important;
     color: #000 !important;
-    font-size: 7.5px !important;
-    padding: 1px !important;
+    font-size: 12px !important;
+    padding: 3px 2px !important;
     height: auto !important;
-    min-height: 25px;
+    min-height: 40px;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     overflow: hidden;
   }
 
   .day-cell {
-    width: 25px !important;
+    width: 35px !important;
   }
 
   .time-cell {
-    width: 50px !important;
+    width: 80px !important;
   }
 
-  .sticky-left,
-  .sticky-left-2 {
-    position: static !important;
-    background: #f8fafc !important;
-    border-right: 1px solid #000 !important;
-  }
-
-  .aula-alocada-mini {
-    background: #f1f5f9 !important;
-    border: 1px solid #000 !important;
-    color: #000 !important;
-    box-shadow: none !important;
-    height: auto !important;
-    padding: 1px !important;
-    border-radius: 2px !important;
-    margin: 0 !important;
-  }
+  /* ... sticky ... */
 
   .aula-text-compact {
     color: #000 !important;
-    font-size: 7px !important;
-    line-height: 1.1;
+    font-size: 12px !important;
+    line-height: 1.2;
+    font-weight: bold !important;
   }
 
   .interval-row td {
