@@ -673,11 +673,13 @@ export function ProfessorDashboard() {
     doc.setTextColor(71, 85, 105);
     doc.text(`Turno: ${turnoNome}   |   Data de Geração: ${new Date().toLocaleDateString('pt-BR')}`, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
 
-    // Filtrar turmas do turno
-    const turmasDoTurno = turmas.filter(t => {
-      const tId = Number(t.id);
-      return !isNaN(tId) && (t.turno === String(selectedTurno) || t.turno === turnoNome);
-    });
+    // Filtrar e ORDENAR turmas do turno (A-Z)
+    const turmasDoTurno = turmas
+      .filter(t => {
+        const tId = Number(t.id);
+        return !isNaN(tId) && (t.turno === String(selectedTurno) || t.turno === turnoNome);
+      })
+      .sort((a, b) => a.nome.localeCompare(b.nome));
 
     const body: any[] = [];
 
@@ -763,7 +765,7 @@ export function ProfessorDashboard() {
         0: { fontStyle: 'bold', cellWidth: 15 },
         1: { fontStyle: 'bold', cellWidth: 20 },
       },
-      didDrawCell: (data) => {
+      didParseCell: (data) => {
         if (data.section === 'body') {
           const rowData = data.row.raw as any;
           const cellData = data.cell.raw as any;
@@ -771,16 +773,14 @@ export function ProfessorDashboard() {
           if (rowData._isInterval) {
             data.cell.styles.fillColor = [241, 245, 249];
             data.cell.styles.fontStyle = 'bolditalic';
-          } else if (cellData && cellData._isAula) {
-            // Se for uma aula, usar a cor da disciplina e texto branco
+          } else if (cellData && typeof cellData === 'object' && cellData._isAula) {
             data.cell.styles.fillColor = cellData._color;
-            data.cell.styles.textColor = [255, 255, 255]; // Texto branco para contraste
+            data.cell.styles.textColor = [255, 255, 255];
             data.cell.styles.fontStyle = 'bold';
           } else {
-            // Se não for aula, usar a cor do dia
             const dayIdx = rowData._dayIdx;
             if (dayIdx !== undefined && DAY_COLORS_RGB[dayIdx]) {
-              data.cell.styles.fillColor = DAY_COLORS_RGB[dayIdx] as any;
+              data.cell.styles.fillColor = DAY_COLORS_RGB[dayIdx] as [number, number, number];
             }
           }
         }
