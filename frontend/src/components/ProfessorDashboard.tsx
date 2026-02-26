@@ -842,7 +842,7 @@ export function ProfessorDashboard() {
                   <div className="info-card">
                     <span className="info-label">Turno</span>
                     <select
-                      className="turno-selector-inline"
+                      className="turno-selector-inline no-print"
                       value={selectedTurno || ''}
                       onChange={(e) => setSelectedTurno(Number(e.target.value))}
                     >
@@ -1041,7 +1041,7 @@ export function ProfessorDashboard() {
                                               </div>
                                               {(isAdmin || aula.professor_id === professorId) && (
                                                 <button
-                                                  className="remove-btn-mini"
+                                                  className="remove-btn-mini no-print"
                                                   onClick={() => handleRemoverAlocacao(aula.id)}
                                                 >
                                                   ✕

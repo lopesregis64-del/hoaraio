@@ -910,7 +910,7 @@ tr.day-start td {
 @media print {
   @page {
     size: A4 landscape;
-    margin: 3mm;
+    margin: 2mm;
   }
 
   /* Hide regular UI */
@@ -919,6 +919,7 @@ tr.day-start td {
   .prof-tabs,
   .disciplinas-top-panel,
   .turno-selector,
+  .turno-selector-inline,
   form,
   .disciplinas-list,
   .print-btn,
@@ -950,14 +951,14 @@ tr.day-start td {
 
   .print-report-header {
     display: block !important;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     border-bottom: 2px solid #334155;
-    padding-bottom: 10px;
+    padding-bottom: 5px;
     text-align: left;
   }
 
   .print-report-header h1 {
-    font-size: 20px;
+    font-size: 18px;
     color: #1e293b;
     margin: 0 0 5px 0;
   }
@@ -965,14 +966,14 @@ tr.day-start td {
   .report-info {
     display: flex;
     gap: 30px;
-    font-size: 12px;
+    font-size: 11px;
     color: #334155;
   }
 
   .schedule-table {
     width: 100% !important;
     min-width: 0 !important;
-    table-layout: auto !important;
+    table-layout: fixed !important;
     border: 1px solid #000 !important;
     border-collapse: collapse !important;
   }
@@ -981,45 +982,54 @@ tr.day-start td {
   .schedule-table tbody td {
     border: 1px solid #000 !important;
     color: #000 !important;
-    font-size: 8.5px !important;
-    padding: 2px 1px !important;
+    font-size: 7.5px !important;
+    padding: 1px !important;
     height: auto !important;
-    min-height: 30px;
+    min-height: 25px;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     overflow: hidden;
-    text-overflow: clip;
+  }
+
+  .day-cell {
+    width: 25px !important;
+  }
+
+  .time-cell {
+    width: 50px !important;
   }
 
   .sticky-left,
   .sticky-left-2 {
     position: static !important;
     background: #f8fafc !important;
-    width: auto !important;
-    border-right: 1px solid #1e293b !important;
+    border-right: 1px solid #000 !important;
   }
 
   .aula-alocada-mini {
     background: #f1f5f9 !important;
-    border: 1px solid #1e293b !important;
+    border: 1px solid #000 !important;
     color: #000 !important;
     box-shadow: none !important;
     height: auto !important;
-    padding: 2px !important;
-    border-radius: 4px !important;
+    padding: 1px !important;
+    border-radius: 2px !important;
+    margin: 0 !important;
   }
 
   .aula-text-compact {
     color: #000 !important;
-    font-size: 8.5px !important;
+    font-size: 7px !important;
+    line-height: 1.1;
   }
 
   .interval-row td {
     background: #f8fafc !important;
     color: #1e293b !important;
-    border: 1px solid #1e293b !important;
+    border: 1px solid #000 !important;
     font-weight: bold !important;
-    height: 25px !important;
+    height: 18px !important;
+    font-size: 8px !important;
   }
 
   .busy-elsewhere-indicator {
