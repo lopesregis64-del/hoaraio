@@ -705,7 +705,7 @@ export function ProfessorDashboard() {
             const discNome = obterNomeDisciplina(aula.subject_id);
             const profObj = professores.find(p => p.id === aula.professor_id);
             const profAbrev = profObj ? abreviarNome(profObj.nome) : '';
-            return `${abreviarDisciplina(discNome)}\n${profAbrev}`;
+            return `${abreviarDisciplina(discNome)}-${profAbrev}`;
           })
         ];
 
