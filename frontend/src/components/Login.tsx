@@ -186,10 +186,9 @@ export function Login({ onLoginSuccess }: LoginProps) {
           </form>
         )}
 
-        <div className="demo-credentials">
-          <h4>Credenciais de Teste:</h4>
-          <p><strong>Admin:</strong> admin@test.com / 123456</p>
-          <p><strong>Professor:</strong> prof@test.com / 123456</p>
+        <div className="login-footer">
+          <p>E.E. Alcides Cesar Meneses</p>
+          <p>Desenvolvido por <strong>Reginaldo Lopes</strong> &copy; 2026</p>
         </div>
       </div>
     </div>
