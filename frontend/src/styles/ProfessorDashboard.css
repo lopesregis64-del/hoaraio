@@ -1240,3 +1240,19 @@ tr.day-start td {
   align-items: center;
   margin-bottom: 20px;
 }
+
+/* Ajuste de Largura Total (1px de cada lado) */
+.professor-dashboard:has(.dashboard-container) .prof-content {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.professor-dashboard:has(.dashboard-container) .tab-content.dashboard-container {
+  width: calc(100% - 2px);
+  margin: 0 auto;
+  padding: 10px;
+  /* Um pouco de respiro interno ainda é bom, mas a largura externa é máxima */
+  border-radius: 0;
+}
