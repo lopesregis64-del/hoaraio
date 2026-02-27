@@ -877,6 +877,22 @@ export function ProfessorDashboard() {
             </button>
           )}
         </div>
+
+        <div className="prof-tabs header-tabs no-print">
+          <button
+            className={activeTab === 'disciplinas' ? 'active' : ''}
+            onClick={() => setActiveTab('disciplinas')}
+          >
+            Minhas Disciplinas
+          </button>
+          <button
+            className={activeTab === 'grade' ? 'active' : ''}
+            onClick={() => setActiveTab('grade')}
+          >
+            Grade de Horários
+          </button>
+        </div>
+
         <button onClick={handleLogout} className="logout-btn">
           Sair
         </button>
@@ -884,20 +900,6 @@ export function ProfessorDashboard() {
 
       {error && <div className="error-message">{error}</div>}
 
-      <div className="prof-tabs">
-        <button
-          className={activeTab === 'disciplinas' ? 'active' : ''}
-          onClick={() => setActiveTab('disciplinas')}
-        >
-          Minhas Disciplinas
-        </button>
-        <button
-          className={activeTab === 'grade' ? 'active' : ''}
-          onClick={() => setActiveTab('grade')}
-        >
-          Grade de Horários
-        </button>
-      </div>
 
       <div className="prof-content">
         {activeTab === 'disciplinas' && (
