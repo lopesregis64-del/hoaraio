@@ -100,6 +100,24 @@ export function ProfessorDashboard() {
   const [filtroProfessorId, setFiltroProfessorId] = useState<number | null>(null);
   const [editandoSubject, setEditandoSubject] = useState<{ id: number; quantidade_aulas: number } | null>(null);
   const [draggingFromGrid, setDraggingFromGrid] = useState<{ allocationId: number; psItem: ProfessorSubject } | null>(null);
+  const [turmasVisiveis, setTurmasVisiveis] = useState<number[]>([]);
+
+  // Carregar turmas visíveis inicialmente quando o turno muda
+  useEffect(() => {
+    if (selectedTurno) {
+      const turnoNome = turnos.find(t => t.id === selectedTurno)?.nome;
+      const tIds = turmas
+        .filter(t => t.turno === turnoNome)
+        .map(t => t.id);
+      setTurmasVisiveis(tIds);
+    }
+  }, [selectedTurno, turmas, turnos]);
+
+  const toggleTurmaVisivel = (id: number) => {
+    setTurmasVisiveis(prev =>
+      prev.includes(id) ? prev.filter(tId => tId !== id) : [...prev, id]
+    );
+  };
 
   const obterNomeDisciplina = (id: number) => {
     return disciplinas.find((d) => d.id === id)?.nome || '';
@@ -1095,38 +1113,16 @@ export function ProfessorDashboard() {
         )}
 
         {activeTab === 'grade' && (
-          <div className="tab-content">
-            <div className="tab-header-flex">
-              <h2>Grade de Horários</h2>
-              <div className="tab-header-btns">
-                <button onClick={handleDownloadExcel} className="print-btn no-print export-excel-btn">
-                  📊 Baixar Horário Excel
-                </button>
-                <button onClick={handleDownloadPDF} className="print-btn no-print export-pdf-btn">
-                  📄 Baixar Horário PDF
-                </button>
-              </div>
-            </div>
-
-
+          <div className="tab-content dashboard-container">
             {!selectedTurno ? (
               <p>Selecione um turno na aba "Minhas Disciplinas".</p>
             ) : (
-              <div className="grade-wrapper">
-                <div className="grade-header-info">
-                  <div className="info-card">
-                    <span className="info-label">{isAdmin ? 'Logado como' : 'Professor(a)'}</span>
-                    <span className="info-value">
-                      {isAdmin
-                        ? 'Administrador'
-                        : (professores.find(p => p.id === professorId)?.nome || 'Carregando...')
-                      }
-                    </span>
-                  </div>
-                  <div className="info-card">
-                    <span className="info-label">Turno</span>
+              <div className="dashboard-layout">
+                <aside className="dashboard-sidebar no-print">
+                  <div className="sidebar-group">
+                    <label className="sidebar-label">Turno</label>
                     <select
-                      className="turno-selector-inline no-print"
+                      className="sidebar-select"
                       value={selectedTurno || ''}
                       onChange={(e) => setSelectedTurno(Number(e.target.value))}
                     >
@@ -1138,234 +1134,281 @@ export function ProfessorDashboard() {
                   </div>
 
                   {isAdmin && (
-                    <div className="info-card">
-                      <span className="info-label">Professor (Filtro)</span>
+                    <div className="sidebar-group">
+                      <label className="sidebar-label">Professor</label>
                       <select
-                        className="turno-selector-inline"
+                        className="sidebar-select"
                         value={filtroProfessorId || ''}
                         onChange={(e) => setFiltroProfessorId(e.target.value ? Number(e.target.value) : null)}
                       >
-                        <option value="">Todos os Professores</option>
+                        <option value="">Todos</option>
                         {professores.map(p => (
                           <option key={p.id} value={p.id}>{p.nome}</option>
                         ))}
                       </select>
                     </div>
                   )}
-                  <div className="info-card">
-                    <span className="info-label">Carga Horária</span>
-                    <span className="info-value">
+
+                  <div className="sidebar-group classes-filter">
+                    <div className="sidebar-header-row">
+                      <label className="sidebar-label">Minhas Turmas</label>
+                      <button
+                        className="btn-tiny"
+                        onClick={() => {
+                          const turnoNome = turnos.find(t => t.id === selectedTurno)?.nome;
+                          const tIds = turmas.filter(t => t.turno === turnoNome).map(t => t.id);
+                          setTurmasVisiveis(turmasVisiveis.length === tIds.length ? [] : tIds);
+                        }}
+                      >
+                        {turmasVisiveis.length === 0 ? 'Ver Todas' : 'Limpar'}
+                      </button>
+                    </div>
+                    <div className="classes-checkbox-list">
+                      {turmas
+                        .filter(t => t.turno === turnos.find(tr => tr.id === selectedTurno)?.nome)
+                        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+                        .map(t => (
+                          <label key={t.id} className="checkbox-item">
+                            <input
+                              type="checkbox"
+                              checked={turmasVisiveis.includes(t.id)}
+                              onChange={() => toggleTurmaVisivel(t.id)}
+                            />
+                            <span>{t.nome}</span>
+                          </label>
+                        ))
+                      }
+                    </div>
+                  </div>
+
+                  <div className="sidebar-group sidebar-actions">
+                    <button onClick={handleDownloadExcel} className="btn-sidebar-action">
+                      📊 Excel
+                    </button>
+                    <button onClick={handleDownloadPDF} className="btn-sidebar-action">
+                      📄 PDF
+                    </button>
+                  </div>
+
+                  <div className="sidebar-stats">
+                    <div className="info-label">Carga Total</div>
+                    <div className="info-value">
                       {professorSubjects
-                        .filter(ps => professores.some(p => p.id === ps.professor_id)) // Check if professor exists
+                        .filter(ps => professores.some(p => p.id === ps.professor_id))
                         .filter(ps => !isAdmin || !filtroProfessorId || ps.professor_id === filtroProfessorId)
                         .reduce((acc, curr) => acc + curr.quantidade_aulas, 0)
                       } Aulas
-                    </span>
+                    </div>
                   </div>
-                </div>
+                </aside>
 
-                {/* Painel Superior de Disciplinas */}
-                <div className="disciplinas-top-panel">
-                  <div className="top-panel-header">
-                    <h3>Disciplinas Disponíveis</h3>
-                    <p className="hint">Arraste as aulas para a grade</p>
-                  </div>
+                <div className="dashboard-main">
+                  <div className="grade-wrapper">
 
-                  <div className="disciplinas-cards-container">
-                    {professorSubjects
-                      .filter(ps => professores.some(p => p.id === ps.professor_id))
-                      .filter(ps => !isAdmin || !filtroProfessorId || ps.professor_id === filtroProfessorId)
-                      .length === 0 ? (
-                      <p className="empty-msg">Nenhuma disciplina adicionada.</p>
-                    ) : (
-                      professorSubjects
-                        .filter(ps => professores.some(p => p.id === ps.professor_id))
-                        .filter(ps => !isAdmin || !filtroProfessorId || ps.professor_id === filtroProfessorId)
-                        .flatMap((ps) => {
-                          const numAlocadas = allocations.filter(a => Number(a.professor_subject_id) === Number(ps.id)).length;
-                          const numRestantes = ps.quantidade_aulas - numAlocadas;
+                    {/* Painel Superior de Disciplinas */}
+                    <div className="disciplinas-top-panel">
+                      <div className="top-panel-header">
+                        <h3>Disciplinas Disponíveis</h3>
+                        <p className="hint">Arraste as aulas para a grade</p>
+                      </div>
 
-                          return Array.from({ length: Math.max(0, numRestantes) }).map((_, idx) => (
-                            <div
-                              key={`${ps.id}-card-${idx}`}
-                              className="disciplina-card-mini"
-                              style={{ borderLeft: `4px solid ${SUBJECT_COLORS[ps.subject_id % SUBJECT_COLORS.length]}` }}
-                              draggable
-                              onDragStart={(e) => handleDragStart(e, ps)}
-                            >
-                              <div className="card-subject">
-                                {abreviarDisciplina(obterNomeDisciplina(ps.subject_id))}-{abreviarNome(professores.find(p => p.id === ps.professor_id)?.nome || '')}
-                              </div>
-                              <div className="card-class">{obterNomeTurma(ps.class_id)}</div>
-                            </div>
-                          ));
-                        })
-                    )}
-                  </div>
-                </div>
+                      <div className="disciplinas-cards-container">
+                        {professorSubjects
+                          .filter(ps => professores.some(p => p.id === ps.professor_id))
+                          .filter(ps => !isAdmin || !filtroProfessorId || ps.professor_id === filtroProfessorId)
+                          .length === 0 ? (
+                          <p className="empty-msg">Nenhuma disciplina adicionada.</p>
+                        ) : (
+                          professorSubjects
+                            .filter(ps => professores.some(p => p.id === ps.professor_id))
+                            .filter(ps => !isAdmin || !filtroProfessorId || ps.professor_id === filtroProfessorId)
+                            .flatMap((ps) => {
+                              const numAlocadas = allocations.filter(a => Number(a.professor_subject_id) === Number(ps.id)).length;
+                              const numRestantes = ps.quantidade_aulas - numAlocadas;
 
-                <div className="grade-container-full">
-                  <div className="table-scroll">
-                    <table className="schedule-table">
-                      <thead>
-                        <tr>
-                          <th className="sticky-left">DIA</th>
-                          <th className="sticky-left-2">HORA</th>
-                          {turmas
-                            .filter((t) => {
-                              const turnoNome = turnos.find((tr) => tr.id === selectedTurno)?.nome;
-                              return t.turno === turnoNome;
+                              return Array.from({ length: Math.max(0, numRestantes) }).map((_, idx) => (
+                                <div
+                                  key={`${ps.id}-card-${idx}`}
+                                  className="disciplina-card-mini"
+                                  style={{ borderLeft: `4px solid ${SUBJECT_COLORS[ps.subject_id % SUBJECT_COLORS.length]}` }}
+                                  draggable
+                                  onDragStart={(e) => handleDragStart(e, ps)}
+                                >
+                                  <div className="card-subject">
+                                    {abreviarDisciplina(obterNomeDisciplina(ps.subject_id))}-{abreviarNome(professores.find(p => p.id === ps.professor_id)?.nome || '')}
+                                  </div>
+                                  <div className="card-class">{obterNomeTurma(ps.class_id)}</div>
+                                </div>
+                              ));
                             })
-                            .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-                            .map((turma) => (
-                              <th key={turma.id} style={{ width: '100px' }}>{turma.nome}</th>
-                            ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {DIAS.map((diaNome, diaIdx) => {
-                          const turmasDoTurno = turmas
-                            .filter((t) => {
-                              const turnoNome = turnos.find((tr) => tr.id === selectedTurno)?.nome;
-                              return t.turno === turnoNome;
-                            })
-                            .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+                        )}
+                      </div>
+                    </div>
 
-                          return (
-                            <React.Fragment key={diaIdx}>
-                              {SLOTS.map((slot) => {
-                                const renderRows = [];
+                    <div className="grade-container-full">
+                      <div className="table-scroll">
+                        <table className="schedule-table">
+                          <thead>
+                            <tr>
+                              <th className="sticky-left">DIA</th>
+                              <th className="sticky-left-2">HORA</th>
+                              {turmas
+                                .filter((t) => {
+                                  const turnoNome = turnos.find((tr) => tr.id === selectedTurno)?.nome;
+                                  return t.turno === turnoNome && turmasVisiveis.includes(t.id);
+                                })
+                                .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+                                .map((turma) => (
+                                  <th key={turma.id} style={{ width: '100px' }}>{turma.nome}</th>
+                                ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {DIAS.map((diaNome, diaIdx) => {
+                              const turmasDoTurno = turmas
+                                .filter((t) => {
+                                  const turnoNome = turnos.find((tr) => tr.id === selectedTurno)?.nome;
+                                  return t.turno === turnoNome && turmasVisiveis.includes(t.id);
+                                })
+                                .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
-                                // Renderiza a aula normal
-                                renderRows.push(
-                                  <tr key={`${diaIdx}-${slot}`} className={slot === 0 ? 'day-start' : ''}>
-                                    {slot === 0 && (
-                                      <td className={`day-cell sticky-left day-${diaIdx}`} rowSpan={SLOTS.length + 1}>
-                                        <div className="day-stack">
-                                          {diaNome.toUpperCase().split('').map((char, i) => (
-                                            <div key={i}>{char}</div>
-                                          ))}
-                                        </div>
-                                      </td>
-                                    )}
+                              return (
+                                <React.Fragment key={diaIdx}>
+                                  {SLOTS.map((slot) => {
+                                    const renderRows = [];
 
-                                    <td className={`time-cell sticky-left-2 day-${diaIdx}`}>
-                                      Aula {slot + 1}
-                                    </td>
+                                    // Renderiza a aula normal
+                                    renderRows.push(
+                                      <tr key={`${diaIdx}-${slot}`} className={slot === 0 ? 'day-start' : ''}>
+                                        {slot === 0 && (
+                                          <td className={`day-cell sticky-left day-${diaIdx}`} rowSpan={SLOTS.length + 1}>
+                                            <div className="day-stack">
+                                              {diaNome.toUpperCase().split('').map((char, i) => (
+                                                <div key={i}>{char}</div>
+                                              ))}
+                                            </div>
+                                          </td>
+                                        )}
 
-                                    {turmasDoTurno.map((turma) => {
-                                      const allAllocationsInSlot = allocations
-                                        .filter(a => professores.some(p => p.id === a.professor_id))
-                                        .filter(a => a.dia_semana === diaIdx && a.slot === slot && a.class_id === turma.id);
+                                        <td className={`time-cell sticky-left-2 day-${diaIdx}`}>
+                                          Aula {slot + 1}
+                                        </td>
 
-                                      const aula = allAllocationsInSlot[0];
+                                        {turmasDoTurno.map((turma) => {
+                                          const allAllocationsInSlot = allocations
+                                            .filter(a => professores.some(p => p.id === a.professor_id))
+                                            .filter(a => a.dia_semana === diaIdx && a.slot === slot && a.class_id === turma.id);
 
-                                      const activeDrag = draggedItem || draggingFromGrid?.psItem;
-                                      const activeDragClassId = activeDrag?.class_id;
-                                      const activeDragProfId = activeDrag?.professor_id !== undefined
-                                        ? activeDrag.professor_id
-                                        : (isAdmin ? null : professorId);
+                                          const aula = allAllocationsInSlot[0];
 
-                                      // Turma tem aula de OUTRO professor neste slot
-                                      const classeOcupada = !aula && allAllocationsInSlot.length > 0;
+                                          const activeDrag = draggedItem || draggingFromGrid?.psItem;
+                                          const activeDragClassId = activeDrag?.class_id;
+                                          const activeDragProfId = activeDrag?.professor_id !== undefined
+                                            ? activeDrag.professor_id
+                                            : (isAdmin ? null : professorId);
 
-                                      // Professor já está em outra turma neste slot
-                                      const professorJaOcupado = activeDragProfId ? allocations.some(
-                                        (a) => a.dia_semana === diaIdx && a.slot === slot && a.professor_id === activeDragProfId && a.class_id !== turma.id
-                                          && !(draggingFromGrid && a.id === draggingFromGrid.allocationId)
-                                      ) : false;
+                                          // Turma tem aula de OUTRO professor neste slot
+                                          const classeOcupada = !aula && allAllocationsInSlot.length > 0;
 
-                                      // Drop é inválido para disciplina arrastada (turma errada)
-                                      const dropInvalido = !!activeDrag && activeDragClassId !== undefined && activeDragClassId !== turma.id;
-                                      // Drop é válido: mesma turma, professor livre, célula vazia
-                                      const dropValido = !!activeDrag && !dropInvalido && !professorJaOcupado && !aula;
+                                          // Professor já está em outra turma neste slot
+                                          const professorJaOcupado = activeDragProfId ? allocations.some(
+                                            (a) => a.dia_semana === diaIdx && a.slot === slot && a.professor_id === activeDragProfId && a.class_id !== turma.id
+                                              && !(draggingFromGrid && a.id === draggingFromGrid.allocationId)
+                                          ) : false;
 
-                                      return (
-                                        <td
-                                          key={turma.id}
-                                          className={`slot-cell
+                                          // Drop é inválido para disciplina arrastada (turma errada)
+                                          const dropInvalido = !!activeDrag && activeDragClassId !== undefined && activeDragClassId !== turma.id;
+                                          // Drop é válido: mesma turma, professor livre, célula vazia
+                                          const dropValido = !!activeDrag && !dropInvalido && !professorJaOcupado && !aula;
+
+                                          return (
+                                            <td
+                                              key={turma.id}
+                                              className={`slot-cell
                                             ${dropInvalido ? 'invalid-drop' : ''}
                                             ${!dropInvalido && professorJaOcupado ? 'prof-busy-elsewhere' : ''}
                                             ${!dropInvalido && !professorJaOcupado && classeOcupada ? 'class-occupied' : ''}
                                             ${dropValido ? 'valid-drop' : ''}
                                           `}
-                                          onDragOver={handleDragOver}
-                                          onDrop={(e) => {
-                                            if (activeDrag && activeDragClassId !== turma.id) {
-                                              setError(`Esta disciplina pertence à turma ${obterNomeTurma(activeDragClassId!)}`);
-                                              return;
-                                            }
-                                            handleDropSpreadsheet(e, diaIdx, slot, turma.id);
-                                          }}
-                                        >
-                                          {aula ? (
-                                            <div
-                                              className={`aula-alocada-mini ${(!isAdmin && aula.professor_id !== professorId) || (isAdmin && filtroProfessorId && aula.professor_id !== filtroProfessorId) ? 'aula-outra' : ''}`}
-                                              style={{
-                                                background: SUBJECT_COLORS[aula.subject_id % SUBJECT_COLORS.length],
-                                                boxShadow: `0 4px 6px -1px ${SUBJECT_COLORS[aula.subject_id % SUBJECT_COLORS.length]}33`,
-                                                cursor: (isAdmin || aula.professor_id === professorId) ? 'grab' : 'default',
-                                                opacity: draggingFromGrid?.allocationId === aula.id ? 0.4 : 1,
-                                              }}
-                                              draggable={isAdmin || aula.professor_id === professorId}
-                                              onDragStart={(ev) => {
-                                                if (!isAdmin && aula.professor_id !== professorId) return;
-                                                ev.dataTransfer.effectAllowed = 'move';
-                                                const ps = professorSubjects.find(p => p.id === aula.professor_subject_id);
-                                                if (ps) {
-                                                  setDraggingFromGrid({ allocationId: aula.id, psItem: ps });
-                                                  setDraggedItem(ps); // to drive slot highlighting
+                                              onDragOver={handleDragOver}
+                                              onDrop={(e) => {
+                                                if (activeDrag && activeDragClassId !== turma.id) {
+                                                  setError(`Esta disciplina pertence à turma ${obterNomeTurma(activeDragClassId!)}`);
+                                                  return;
                                                 }
-                                              }}
-                                              onDragEnd={() => {
-                                                setDraggingFromGrid(null);
-                                                setDraggedItem(null);
+                                                handleDropSpreadsheet(e, diaIdx, slot, turma.id);
                                               }}
                                             >
-                                              <div className="aula-text-compact">
-                                                {`${abreviarDisciplina(obterNomeDisciplina(aula.subject_id))}-${abreviarNome(professores.find(p => p.id === aula.professor_id)?.nome || '')}`}
-                                              </div>
-                                              {(isAdmin || aula.professor_id === professorId) && (
-                                                <button
-                                                  className="remove-btn-mini no-print"
-                                                  onClick={() => handleRemoverAlocacao(aula.id)}
+                                              {aula ? (
+                                                <div
+                                                  className={`aula-alocada-mini ${(!isAdmin && aula.professor_id !== professorId) || (isAdmin && filtroProfessorId && aula.professor_id !== filtroProfessorId) ? 'aula-outra' : ''}`}
+                                                  style={{
+                                                    background: SUBJECT_COLORS[aula.subject_id % SUBJECT_COLORS.length],
+                                                    boxShadow: `0 4px 6px -1px ${SUBJECT_COLORS[aula.subject_id % SUBJECT_COLORS.length]}33`,
+                                                    cursor: (isAdmin || aula.professor_id === professorId) ? 'grab' : 'default',
+                                                    opacity: draggingFromGrid?.allocationId === aula.id ? 0.4 : 1,
+                                                  }}
+                                                  draggable={isAdmin || aula.professor_id === professorId}
+                                                  onDragStart={(ev) => {
+                                                    if (!isAdmin && aula.professor_id !== professorId) return;
+                                                    ev.dataTransfer.effectAllowed = 'move';
+                                                    const ps = professorSubjects.find(p => p.id === aula.professor_subject_id);
+                                                    if (ps) {
+                                                      setDraggingFromGrid({ allocationId: aula.id, psItem: ps });
+                                                      setDraggedItem(ps); // to drive slot highlighting
+                                                    }
+                                                  }}
+                                                  onDragEnd={() => {
+                                                    setDraggingFromGrid(null);
+                                                    setDraggedItem(null);
+                                                  }}
                                                 >
-                                                  ✕
-                                                </button>
+                                                  <div className="aula-text-compact">
+                                                    {`${abreviarDisciplina(obterNomeDisciplina(aula.subject_id))}-${abreviarNome(professores.find(p => p.id === aula.professor_id)?.nome || '')}`}
+                                                  </div>
+                                                  {(isAdmin || aula.professor_id === professorId) && (
+                                                    <button
+                                                      className="remove-btn-mini no-print"
+                                                      onClick={() => handleRemoverAlocacao(aula.id)}
+                                                    >
+                                                      ✕
+                                                    </button>
+                                                  )}
+                                                </div>
+                                              ) : professorJaOcupado ? (
+                                                <div className="busy-elsewhere-indicator">
+                                                  <span>OCUPADO</span>
+                                                </div>
+                                              ) : (
+                                                <div className="empty-slot-mini"></div>
                                               )}
-                                            </div>
-                                          ) : professorJaOcupado ? (
-                                            <div className="busy-elsewhere-indicator">
-                                              <span>OCUPADO</span>
-                                            </div>
-                                          ) : (
-                                            <div className="empty-slot-mini"></div>
-                                          )}
-                                        </td>
+                                            </td>
+                                          );
+                                        })}
+                                      </tr>
+                                    );
+
+                                    // Inserir intervalo após a 3ª aula (index 2)
+                                    if (slot === 2) {
+                                      renderRows.push(
+                                        <tr key={`${diaIdx}-interval`} className="interval-row">
+                                          <td className={`time-cell sticky-left-2 day-${diaIdx}`}>PAUSA</td>
+                                          <td colSpan={turmasDoTurno.length} className="interval-cell text-center">
+                                            INTERVALO (RECREIO)
+                                          </td>
+                                        </tr>
                                       );
-                                    })}
-                                  </tr>
-                                );
+                                    }
 
-                                // Inserir intervalo após a 3ª aula (index 2)
-                                if (slot === 2) {
-                                  renderRows.push(
-                                    <tr key={`${diaIdx}-interval`} className="interval-row">
-                                      <td className={`time-cell sticky-left-2 day-${diaIdx}`}>PAUSA</td>
-                                      <td colSpan={turmasDoTurno.length} className="interval-cell text-center">
-                                        INTERVALO (RECREIO)
-                                      </td>
-                                    </tr>
-                                  );
-                                }
-
-                                return renderRows;
-                              })}
-                            </React.Fragment>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                                    return renderRows;
+                                  })}
+                                </React.Fragment>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1373,6 +1416,6 @@ export function ProfessorDashboard() {
           </div>
         )}
       </div>
-    </div >
+    </div>
   );
 }
