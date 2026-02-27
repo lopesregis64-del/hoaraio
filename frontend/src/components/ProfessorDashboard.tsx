@@ -928,7 +928,6 @@ export function ProfessorDashboard() {
                   value={selectedTurno || ''}
                   onChange={(e) => setSelectedTurno(parseInt(e.target.value))}
                 >
-                  <option value="">-- Selecione um turno --</option>
                   {turnos.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.nome} ({t.hora_inicio} - {t.hora_fim})
@@ -1118,7 +1117,6 @@ export function ProfessorDashboard() {
                     value={selectedTurno || ''}
                     onChange={(e) => setSelectedTurno(Number(e.target.value))}
                   >
-                    <option value="">Selecione...</option>
                     {turnos.map(t => (
                       <option key={t.id} value={t.id}>{t.nome}</option>
                     ))}
