@@ -387,7 +387,7 @@ export function AdminDashboard() {
   };
 
   const irParaGradeGlobal = () => {
-    navigate('/professor');
+    navigate('/professor', { state: { tab: 'grade' } });
   };
 
   const handleQuickAssign = async (professorId: number) => {

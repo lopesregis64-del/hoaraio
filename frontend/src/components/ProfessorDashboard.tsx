@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
@@ -70,7 +70,18 @@ function abreviarDisciplina(nome: string) {
 export function ProfessorDashboard() {
   const { token, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('disciplinas'); // Mantido o valor da chave interno, mas rótulos traduzidos no JSX
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState('disciplinas');
+
+  // Ajustar aba ativa se vier do Admin (Grade Global)
+  useEffect(() => {
+    const state = location.state as { tab?: string };
+    if (state && state.tab) {
+      setActiveTab(state.tab);
+      // Limpar o estado para evitar que mude de aba se o usuário atualizar a página
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   // Estados para dados
   const [turnos, setTurnos] = useState<Turno[]>([]);
