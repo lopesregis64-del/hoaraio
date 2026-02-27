@@ -617,6 +617,35 @@ async def get_audit_logs(
     """Listar logs de auditoria (mais recentes primeiro)"""
     return db.query(models.AuditLog).order_by(models.AuditLog.id.desc()).limit(100).all()
 
+@app.post("/admin/allocations/deallocate-all")
+async def deallocate_all(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.obter_usuario_admin)
+):
+    """Remover todas as alocações do sistema (apenas admin)"""
+    try:
+        # 1. Remover todas as alocações
+        db.query(models.Allocation).delete()
+        
+        # 2. Resetar contadores em ProfessorSubject
+        db.query(models.ProfessorSubject).update({models.ProfessorSubject.aulas_alocadas: 0})
+        
+        # 3. Registrar log de auditoria
+        await record_audit_log(db, current_user, "Limpeza Geral", "Todas as alocações foram removidas pelo administrador.")
+        
+        db.commit()
+        
+        # 4. Notificar via WebSocket
+        await manager.broadcast({
+            "type": "clear_all_allocations",
+            "data": {}
+        })
+        
+        return {"message": "Todas as alocações foram removidas com sucesso"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Erro ao desalocar tudo: {str(e)}")
+
 # --- DISCIPLINAS ---
 @app.post("/admin/subjects", response_model=schemas.Subject)
 async def create_subject(

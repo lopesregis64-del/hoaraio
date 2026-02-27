@@ -214,6 +214,9 @@ export function ProfessorDashboard() {
             const deleted = message.data;
             setAllocations((prev) => prev.filter(a => a.id !== deleted.id));
             if (selectedTurno) carregarDisciplinasDoTurno(selectedTurno);
+          } else if (message.type === 'clear_all_allocations') {
+            setAllocations([]);
+            if (selectedTurno) carregarDisciplinasDoTurno(selectedTurno);
           }
         } catch (err) {
           console.error('Erro WebSocket message:', err);

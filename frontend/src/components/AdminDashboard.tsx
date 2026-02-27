@@ -395,6 +395,30 @@ export function AdminDashboard() {
     }
   };
 
+  const handleDeallocateAll = async () => {
+    if (!window.confirm('⚠️ ATENÇÃO: Isso removerá TODAS as alocações de todos os professores e turmas permanentemente. Deseja continuar?')) return;
+
+    setLoading(true);
+    try {
+      const res = await fetchAuth('/admin/allocations/deallocate-all', {
+        method: 'POST'
+      });
+
+      if (res.ok) {
+        alert('Todas as alocações foram removidas com sucesso!');
+        carregarDados();
+        setError('');
+      } else {
+        const data = await res.json();
+        setError(data.detail || 'Erro ao desalocar tudo');
+      }
+    } catch (err) {
+      setError('Erro ao conectar com o servidor para desalocar tudo');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="admin-dashboard">
       <header className="admin-header">
@@ -409,7 +433,7 @@ export function AdminDashboard() {
         </button>
       </header>
 
-      <div className="admin-backup-bar" style={{ display: 'flex', gap: '10px', padding: '10px 30px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+      <div className="admin-backup-bar" style={{ display: 'flex', gap: '10px', padding: '10px 30px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', flexWrap: 'wrap' }}>
         <button
           onClick={handleExportAll}
           className="backup-btn"
@@ -459,6 +483,15 @@ export function AdminDashboard() {
             style={{ position: 'absolute', top: 0, left: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
           />
         </div>
+
+        <button
+          onClick={handleDeallocateAll}
+          className="backup-btn"
+          style={{ padding: '8px 16px', background: '#dc2626', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}
+          disabled={loading}
+        >
+          {loading ? '🚿 Processando...' : '🚿 Desalocar Tudo'}
+        </button>
       </div>
 
       {error && <div className="error-message">{error}</div>}
