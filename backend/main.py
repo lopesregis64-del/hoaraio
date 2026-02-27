@@ -735,22 +735,30 @@ async def delete_class(
 async def create_professor_subject(
     prof_subject: schemas.ProfessorSubjectCreate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.obter_usuario_professor)
+    current_user: models.User = Depends(auth.obter_usuario_gerenciador)
 ):
-    """Professor cadastra disciplinas com quantidade de aulas"""
-    # Buscar professor associado ao user_id
-    professor = db.query(models.Professor).filter(
-        models.Professor.user_id == current_user.id
-    ).first()
+    """Admin or Professor cadastra disciplinas com quantidade de aulas"""
     
-    if not professor:
-        # Se não existir, criar um registro Professor vinculado ao User
-        professor = models.Professor(
-            user_id=current_user.id,
-            nome=current_user.nome
-        )
-        db.add(professor)
-        db.flush()
+    # Determinar qual professor está sendo editado
+    if current_user.tipo == models.UserType.ADMIN and prof_subject.professor_id:
+        # Se for Admin e passar professor_id, usamos o passado
+        professor = db.query(models.Professor).filter(models.Professor.id == prof_subject.professor_id).first()
+        if not professor:
+             raise HTTPException(status_code=404, detail="Professor não encontrado")
+    else:
+        # Professores (ou Admin sem passar ID) usam seu próprio vínculo
+        professor = db.query(models.Professor).filter(
+            models.Professor.user_id == current_user.id
+        ).first()
+        
+        if not professor:
+            # Se não existir (mais comum para novos Admins), criar um registro Professor vinculado ao User
+            professor = models.Professor(
+                user_id=current_user.id,
+                nome=current_user.nome
+            )
+            db.add(professor)
+            db.flush()
     
     # Verificar se já existe
     existing = db.query(models.ProfessorSubject).filter(
@@ -763,7 +771,7 @@ async def create_professor_subject(
     if existing:
         raise HTTPException(status_code=400, detail="Disciplina já cadastrada para esta turma/turno")
     
-    # Usar o professor_id do professor encontrado/criado
+    # Usar o professor_id determinado
     prof_subject_data = prof_subject.dict()
     prof_subject_data['professor_id'] = professor.id
     
@@ -775,16 +783,17 @@ async def create_professor_subject(
 
 @app.get("/professor/professor-subjects", response_model=List[schemas.ProfessorSubject])
 async def read_professor_subjects(
-    turno_id: int,
+    turno_id: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.obter_usuario_gerenciador)
 ):
-    """Listar disciplinas do professor para um turno específico"""
-    # Se for Admin, retornar todas as disciplinas de todos os professores para este turno
+    """Listar disciplinas do professor (opcionalmente por turno)"""
+    # Se for Admin, retornar todas as disciplinas de todos os professores (ou filtrado por turno se informado)
     if current_user.tipo == models.UserType.ADMIN:
-        return db.query(models.ProfessorSubject).filter(
-            models.ProfessorSubject.turno_id == turno_id
-        ).all()
+        query = db.query(models.ProfessorSubject)
+        if turno_id:
+            query = query.filter(models.ProfessorSubject.turno_id == turno_id)
+        return query.all()
 
     # Buscar o professor associado ao user_id
     professor = db.query(models.Professor).filter(

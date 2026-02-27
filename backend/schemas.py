@@ -105,6 +105,7 @@ class ProfessorSubjectCreate(BaseModel):
     class_id: int
     turno_id: int
     quantidade_aulas: int
+    professor_id: Optional[int] = None
 
 class ProfessorSubject(ProfessorSubjectBase):
     id: int

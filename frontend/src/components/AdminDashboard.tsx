@@ -38,6 +38,15 @@ interface AuditLog {
   data_hora: string;
 }
 
+interface ProfessorSubject {
+  id: number;
+  professor_id: number;
+  subject_id: number;
+  class_id: number;
+  turno_id: number;
+  quantidade_aulas: number;
+}
+
 export function AdminDashboard() {
   const { token, usuarioTipo, logout } = useAuth();
   const navigate = useNavigate();
@@ -62,6 +71,15 @@ export function AdminDashboard() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [nomeTurma, setNomeTurma] = useState('');
   const [turnoTurma, setTurnoTurma] = useState('');
+
+  // Professor Subjects (Assignments)
+  const [allProfessorSubjects, setAllProfessorSubjects] = useState<ProfessorSubject[]>([]);
+  const [quickAssignment, setQuickAssignment] = useState({
+    subject_id: '',
+    class_id: '',
+    turno_id: '',
+    quantidade_aulas: '1'
+  });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -96,12 +114,13 @@ export function AdminDashboard() {
 
   const carregarDados = async () => {
     try {
-      const [resTurnos, resProfessores, resDisciplinas, resTurmas, resLogs] = await Promise.all([
+      const [resTurnos, resProfessores, resDisciplinas, resTurmas, resLogs, resProfessorSubjects] = await Promise.all([
         fetchAuth('/admin/turnos'),
         fetchAuth('/admin/professors'),
         fetchAuth('/subjects'),
         fetchAuth('/classes'),
         fetchAuth('/admin/audit-logs'),
+        fetchAuth('/professor/professor-subjects'),
       ]);
 
       if (resTurnos.ok) setTurnos(await resTurnos.json());
@@ -109,6 +128,7 @@ export function AdminDashboard() {
       if (resDisciplinas.ok) setDisciplinas(await resDisciplinas.json());
       if (resTurmas.ok) setTurmas(await resTurmas.json());
       if (resLogs.ok) setLogs(await resLogs.json());
+      if (resProfessorSubjects.ok) setAllProfessorSubjects(await resProfessorSubjects.json());
     } catch (err) {
       setError('Erro ao carregar dados');
     }
@@ -367,6 +387,64 @@ export function AdminDashboard() {
 
   const irParaGradeGlobal = () => {
     navigate('/professor');
+  };
+
+  const handleQuickAssign = async (professorId: number) => {
+    if (!quickAssignment.subject_id || !quickAssignment.class_id || !quickAssignment.turno_id || !quickAssignment.quantidade_aulas) {
+      alert('Preencha todos os campos do cadastro rápido');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetchAuth('/professor/professor-subjects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...quickAssignment,
+          subject_id: parseInt(quickAssignment.subject_id),
+          class_id: parseInt(quickAssignment.class_id),
+          turno_id: parseInt(quickAssignment.turno_id),
+          quantidade_aulas: parseInt(quickAssignment.quantidade_aulas),
+          professor_id: professorId // O backend agora aceita esse ID se for Admin
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAllProfessorSubjects([...allProfessorSubjects, data]);
+        setQuickAssignment({ ...quickAssignment, subject_id: '', class_id: '', quantidade_aulas: '1' });
+        // Recarregar estatísticas do professor
+        carregarDados();
+      } else {
+        const data = await res.json();
+        alert(data.detail || 'Erro ao atribuir disciplina');
+      }
+    } catch (err) {
+      alert('Erro de conexão');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveSubjectAssignment = async (psId: number) => {
+    if (!window.confirm('Excluir esta atribuição e todas as suas alocações?')) return;
+    setLoading(true);
+    try {
+      const res = await fetchAuth(`/professor/professor-subjects/${psId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        setAllProfessorSubjects(allProfessorSubjects.filter(ps => ps.id !== psId));
+        carregarDados();
+      } else {
+        alert('Erro ao remover atribuição');
+      }
+    } catch (err) {
+      alert('Erro de conexão');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleExportAll = async () => {
@@ -650,6 +728,74 @@ export function AdminDashboard() {
                     <strong>{p.nome}</strong> - {p.email}
                     <div className="item-stats" style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
                       Aulas: {p.aulas_alocadas} alocadas / {p.total_aulas - p.aulas_alocadas} pendentes (Total: {p.total_aulas})
+                    </div>
+
+                    {/* Cadastro Rápido de Disciplina */}
+                    <div className="quick-assignment" style={{ marginTop: '12px', padding: '10px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                      <div className="current-assignments" style={{ marginBottom: '10px', display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                        {allProfessorSubjects.filter(ps => ps.professor_id === p.id).map(ps => (
+                          <div key={ps.id} style={{ display: 'flex', alignItems: 'center', background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>
+                            <span style={{ marginRight: '5px' }}>
+                              <strong>{disciplinas.find(d => d.id === ps.subject_id)?.nome}</strong> ({turmas.find(t => t.id === ps.class_id)?.nome} - {ps.quantidade_aulas}a)
+                            </span>
+                            <button
+                              onClick={() => handleRemoveSubjectAssignment(ps.id)}
+                              style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', padding: '0', fontWeight: 'bold' }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="assignment-form" style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                        <select
+                          value={quickAssignment.turno_id}
+                          onChange={(e) => setQuickAssignment({ ...quickAssignment, turno_id: e.target.value, class_id: '' })}
+                          style={{ fontSize: '12px', padding: '4px' }}
+                        >
+                          <option value="">Turno</option>
+                          {turnos.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                        </select>
+
+                        <select
+                          value={quickAssignment.class_id}
+                          onChange={(e) => setQuickAssignment({ ...quickAssignment, class_id: e.target.value })}
+                          style={{ fontSize: '12px', padding: '4px' }}
+                          disabled={!quickAssignment.turno_id}
+                        >
+                          <option value="">Turma</option>
+                          {turmas
+                            .filter(t => t.turno === turnos.find(trn => trn.id === parseInt(quickAssignment.turno_id))?.nome)
+                            .map(t => <option key={t.id} value={t.id}>{t.nome}</option>)
+                          }
+                        </select>
+
+                        <select
+                          value={quickAssignment.subject_id}
+                          onChange={(e) => setQuickAssignment({ ...quickAssignment, subject_id: e.target.value })}
+                          style={{ fontSize: '12px', padding: '4px' }}
+                        >
+                          <option value="">Disciplina</option>
+                          {disciplinas.map(d => <option key={d.id} value={d.id}>{d.nome}</option>)}
+                        </select>
+
+                        <input
+                          type="number"
+                          value={quickAssignment.quantidade_aulas}
+                          onChange={(e) => setQuickAssignment({ ...quickAssignment, quantidade_aulas: e.target.value })}
+                          style={{ width: '40px', fontSize: '12px', padding: '4px' }}
+                          min="1"
+                        />
+
+                        <button
+                          onClick={() => handleQuickAssign(p.id)}
+                          style={{ padding: '4px 8px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                          disabled={loading}
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <button onClick={() => handleDeletar('professors', p.id)} className="delete-btn">Excluir</button>

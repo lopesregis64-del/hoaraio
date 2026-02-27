@@ -59,12 +59,12 @@ function abreviarNome(nome: string) {
   if (!nome) return '';
   const partes = nome.trim().split(/\s+/);
   const primeiro = partes[0].toUpperCase();
-  return primeiro.substring(0, 5); // Ex: REGINA -> REGIN
+  return primeiro.substring(0, 4); // Ex: REGINA -> REGI
 }
 
 function abreviarDisciplina(nome: string) {
   if (!nome) return '';
-  return nome.trim().substring(0, 5).toUpperCase(); // Ex: MATEMATICA -> MATEM
+  return nome.trim().substring(0, 6).toUpperCase(); // Ex: MATEMATICA -> MATEMA
 }
 
 export function ProfessorDashboard() {
@@ -1185,7 +1185,9 @@ export function ProfessorDashboard() {
                               draggable
                               onDragStart={(e) => handleDragStart(e, ps)}
                             >
-                              <div className="card-subject">{obterNomeDisciplina(ps.subject_id)}</div>
+                              <div className="card-subject">
+                                {abreviarDisciplina(obterNomeDisciplina(ps.subject_id))}-{abreviarNome(professores.find(p => p.id === ps.professor_id)?.nome || '')}
+                              </div>
                               <div className="card-class">{obterNomeTurma(ps.class_id)}</div>
                             </div>
                           ));
