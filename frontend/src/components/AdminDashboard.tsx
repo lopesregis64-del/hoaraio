@@ -12,6 +12,7 @@ interface Turno {
 
 interface Professor {
   id: number;
+  professor_id?: number;
   email: string;
   nome: string;
   tipo: string;
@@ -406,7 +407,7 @@ export function AdminDashboard() {
           class_id: parseInt(quickAssignment.class_id),
           turno_id: parseInt(quickAssignment.turno_id),
           quantidade_aulas: parseInt(quickAssignment.quantidade_aulas),
-          professor_id: professorId // O backend agora aceita esse ID se for Admin
+          professor_id: professorId // O backend agora aceita esse ID se for Admin (Professor.id)
         })
       });
 
@@ -733,7 +734,7 @@ export function AdminDashboard() {
                     {/* Cadastro Rápido de Disciplina */}
                     <div className="quick-assignment" style={{ marginTop: '12px', padding: '10px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
                       <div className="current-assignments" style={{ marginBottom: '10px', display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-                        {allProfessorSubjects.filter(ps => ps.professor_id === p.id).map(ps => (
+                        {allProfessorSubjects.filter(ps => ps.professor_id === p.professor_id).map(ps => (
                           <div key={ps.id} style={{ display: 'flex', alignItems: 'center', background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>
                             <span style={{ marginRight: '5px' }}>
                               <strong>{disciplinas.find(d => d.id === ps.subject_id)?.nome}</strong> ({turmas.find(t => t.id === ps.class_id)?.nome} - {ps.quantidade_aulas}a)
@@ -789,7 +790,7 @@ export function AdminDashboard() {
                         />
 
                         <button
-                          onClick={() => handleQuickAssign(p.id)}
+                          onClick={() => handleQuickAssign(p.professor_id || p.id)}
                           style={{ padding: '4px 8px', background: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                           disabled={loading}
                         >

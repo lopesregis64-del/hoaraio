@@ -32,6 +32,7 @@ class UserResponse(BaseModel):
         orm_mode = True
 
 class UserWithStats(UserResponse):
+    professor_id: Optional[int] = None
     total_aulas: int = 0
     aulas_alocadas: int = 0
     class Config:

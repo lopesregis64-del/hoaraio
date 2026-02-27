@@ -131,6 +131,14 @@ async def get_professor_atual(
     professor.user_tipo = current_user.tipo.value
     return professor
 
+@app.get("/professors", response_model=List[schemas.Professor])
+async def read_all_professors(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.obter_usuario_gerenciador)
+):
+    """Listar todos os professores (id e nome) para preenchimento de filtros/dashboards"""
+    return db.query(models.Professor).all()
+
 # ===== ADMIN ENDPOINTS =====
 
 # --- TURNOS ---
@@ -231,6 +239,7 @@ async def read_professors(
             
         results.append({
             "id": user.id,
+            "professor_id": professor.id if professor else None,
             "email": user.email,
             "nome": user.nome,
             "tipo": user.tipo,
