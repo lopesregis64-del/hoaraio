@@ -217,6 +217,14 @@ export function ProfessorDashboard() {
           } else if (message.type === 'clear_all_allocations') {
             setAllocations([]);
             if (selectedTurno) carregarDisciplinasDoTurno(selectedTurno);
+          } else if (message.type === 'professor_subject_created') {
+            // Se for do turno atual, recarregar a lista de disciplinas
+            if (selectedTurno && message.data.turno_id === selectedTurno) {
+              carregarDisciplinasDoTurno(selectedTurno);
+            }
+          } else if (message.type === 'professor_subject_deleted') {
+            // Sempre recarregar se algo for excluído para garantir sincronia
+            if (selectedTurno) carregarDisciplinasDoTurno(selectedTurno);
           }
         } catch (err) {
           console.error('Erro WebSocket message:', err);

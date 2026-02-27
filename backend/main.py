@@ -779,6 +779,17 @@ async def create_professor_subject(
     db.add(db_prof_subject)
     db.commit()
     db.refresh(db_prof_subject)
+    
+    # Notificar via WebSocket
+    await manager.broadcast({
+        "type": "professor_subject_created",
+        "data": {
+            "id": db_prof_subject.id,
+            "professor_id": db_prof_subject.professor_id,
+            "turno_id": db_prof_subject.turno_id
+        }
+    })
+    
     return db_prof_subject
 
 @app.get("/professor/professor-subjects", response_model=List[schemas.ProfessorSubject])
@@ -859,6 +870,12 @@ async def delete_professor_subject(
     db.query(models.Allocation).filter(models.Allocation.professor_subject_id == ps_id).delete()
     db.delete(ps)
     db.commit()
+
+    # Notificar via WebSocket
+    await manager.broadcast({
+        "type": "professor_subject_deleted",
+        "data": { "id": ps_id }
+    })
 
 # --- ALOCAÇÕES (com validações) ---
 @app.post("/professor/allocations", response_model=schemas.Allocation)
