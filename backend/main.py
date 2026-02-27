@@ -963,8 +963,11 @@ async def create_allocation(
     ).distinct().all()
     
     lista_dias = [d[0] for d in dias_alocados]
+    print(f"DEBUG ALLOC: Prof {alloc_data['professor_id']}, Turno {alloc_data['turno_id']}, Dias Atuais: {lista_dias}, Novo Dia: {alloc_data['dia_semana']}")
+    
     if alloc_data["dia_semana"] not in lista_dias:
         if len(lista_dias) >= 3:
+            print(f"DEBUG ALLOC: BLOQUEADO - {len(lista_dias)} dias já usados")
             raise HTTPException(
                 status_code=409, 
                 detail="Limite excedido: O professor não pode ter aulas em mais de 3 dias diferentes no mesmo turno."
@@ -1110,6 +1113,21 @@ async def move_allocation(
     ).first()
     if prof_conflict:
         raise HTTPException(status_code=409, detail="Professor já possui aula neste horário")
+
+    # 3. Limitar a 3 dias diferentes por turno para o mesmo professor (Validação na Movimentação)
+    dias_alocados = db.query(models.Allocation.dia_semana).filter(
+        models.Allocation.professor_id == db_allocation.professor_id,
+        models.Allocation.turno_id == db_allocation.turno_id,
+        models.Allocation.id != db_allocation.id # Excluir a própria aula que está sendo movida da contagem
+    ).distinct().all()
+    
+    lista_dias = [d[0] for d in dias_alocados]
+    if move_request.dia_semana not in lista_dias:
+        if len(lista_dias) >= 3:
+            raise HTTPException(
+                status_code=409, 
+                detail="Limite excedido: Ao mover esta aula, o professor ficaria em mais de 3 dias diferentes no mesmo turno."
+            )
 
     # Capturar nomes para o log
     sub_nome = db.query(models.Subject).filter(models.Subject.id == db_allocation.subject_id).first().nome
