@@ -956,6 +956,20 @@ async def create_allocation(
             detail=f"Você já possui aula alocada na turma {class_name} neste horário"
         )
 
+    # 3. Limitar a 3 dias diferentes por turno para o mesmo professor
+    dias_alocados = db.query(models.Allocation.dia_semana).filter(
+        models.Allocation.professor_id == alloc_data["professor_id"],
+        models.Allocation.turno_id == alloc_data["turno_id"]
+    ).distinct().all()
+    
+    lista_dias = [d[0] for d in dias_alocados]
+    if alloc_data["dia_semana"] not in lista_dias:
+        if len(lista_dias) >= 3:
+            raise HTTPException(
+                status_code=409, 
+                detail="Limite excedido: O professor não pode ter aulas em mais de 3 dias diferentes no mesmo turno."
+            )
+
     # Criar alocação
     db_allocation = models.Allocation(**alloc_data)
     db.add(db_allocation)
