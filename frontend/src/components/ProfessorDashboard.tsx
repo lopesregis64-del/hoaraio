@@ -100,24 +100,6 @@ export function ProfessorDashboard() {
   const [filtroProfessorId, setFiltroProfessorId] = useState<number | null>(null);
   const [editandoSubject, setEditandoSubject] = useState<{ id: number; quantidade_aulas: number } | null>(null);
   const [draggingFromGrid, setDraggingFromGrid] = useState<{ allocationId: number; psItem: ProfessorSubject } | null>(null);
-  const [turmasVisiveis, setTurmasVisiveis] = useState<number[]>([]);
-
-  // Carregar turmas visíveis inicialmente quando o turno muda
-  useEffect(() => {
-    if (selectedTurno) {
-      const turnoNome = turnos.find(t => t.id === selectedTurno)?.nome;
-      const tIds = turmas
-        .filter(t => t.turno === turnoNome)
-        .map(t => t.id);
-      setTurmasVisiveis(tIds);
-    }
-  }, [selectedTurno, turmas, turnos]);
-
-  const toggleTurmaVisivel = (id: number) => {
-    setTurmasVisiveis(prev =>
-      prev.includes(id) ? prev.filter(tId => tId !== id) : [...prev, id]
-    );
-  };
 
   const obterNomeDisciplina = (id: number) => {
     return disciplinas.find((d) => d.id === id)?.nome || '';
@@ -1149,38 +1131,6 @@ export function ProfessorDashboard() {
                     </div>
                   )}
 
-                  <div className="sidebar-group classes-filter">
-                    <div className="sidebar-header-row">
-                      <label className="sidebar-label">Minhas Turmas</label>
-                      <button
-                        className="btn-tiny"
-                        onClick={() => {
-                          const turnoNome = turnos.find(t => t.id === selectedTurno)?.nome;
-                          const tIds = turmas.filter(t => t.turno === turnoNome).map(t => t.id);
-                          setTurmasVisiveis(turmasVisiveis.length === tIds.length ? [] : tIds);
-                        }}
-                      >
-                        {turmasVisiveis.length === 0 ? 'Ver Todas' : 'Limpar'}
-                      </button>
-                    </div>
-                    <div className="classes-checkbox-list">
-                      {turmas
-                        .filter(t => t.turno === turnos.find(tr => tr.id === selectedTurno)?.nome)
-                        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-                        .map(t => (
-                          <label key={t.id} className="checkbox-item">
-                            <input
-                              type="checkbox"
-                              checked={turmasVisiveis.includes(t.id)}
-                              onChange={() => toggleTurmaVisivel(t.id)}
-                            />
-                            <span>{t.nome}</span>
-                          </label>
-                        ))
-                      }
-                    </div>
-                  </div>
-
                   <div className="sidebar-group sidebar-actions">
                     <button onClick={handleDownloadExcel} className="btn-sidebar-action">
                       📊 Excel
@@ -1255,7 +1205,7 @@ export function ProfessorDashboard() {
                               {turmas
                                 .filter((t) => {
                                   const turnoNome = turnos.find((tr) => tr.id === selectedTurno)?.nome;
-                                  return t.turno === turnoNome && turmasVisiveis.includes(t.id);
+                                  return t.turno === turnoNome;
                                 })
                                 .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
                                 .map((turma) => (
@@ -1268,7 +1218,7 @@ export function ProfessorDashboard() {
                               const turmasDoTurno = turmas
                                 .filter((t) => {
                                   const turnoNome = turnos.find((tr) => tr.id === selectedTurno)?.nome;
-                                  return t.turno === turnoNome && turmasVisiveis.includes(t.id);
+                                  return t.turno === turnoNome;
                                 })
                                 .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
