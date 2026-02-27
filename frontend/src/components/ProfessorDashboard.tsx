@@ -1109,63 +1109,66 @@ export function ProfessorDashboard() {
 
         {activeTab === 'grade' && (
           <div className="tab-content dashboard-container">
-            {!selectedTurno ? (
-              <p>Selecione um turno na aba "Minhas Disciplinas".</p>
-            ) : (
-              <div className="dashboard-layout">
-                <aside className="dashboard-sidebar no-print">
+            <div className="dashboard-layout">
+              <aside className="dashboard-sidebar no-print">
+                <div className="sidebar-group">
+                  <label className="sidebar-label">Turno</label>
+                  <select
+                    className="sidebar-select"
+                    value={selectedTurno || ''}
+                    onChange={(e) => setSelectedTurno(Number(e.target.value))}
+                  >
+                    <option value="">Selecione...</option>
+                    {turnos.map(t => (
+                      <option key={t.id} value={t.id}>{t.nome}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {isAdmin && (
                   <div className="sidebar-group">
-                    <label className="sidebar-label">Turno</label>
+                    <label className="sidebar-label">Professor</label>
                     <select
                       className="sidebar-select"
-                      value={selectedTurno || ''}
-                      onChange={(e) => setSelectedTurno(Number(e.target.value))}
+                      value={filtroProfessorId || ''}
+                      onChange={(e) => setFiltroProfessorId(e.target.value ? Number(e.target.value) : null)}
                     >
-                      <option value="">Selecione...</option>
-                      {turnos.map(t => (
-                        <option key={t.id} value={t.id}>{t.nome}</option>
+                      <option value="">Todos</option>
+                      {professores.map(p => (
+                        <option key={p.id} value={p.id}>{p.nome}</option>
                       ))}
                     </select>
                   </div>
+                )}
 
-                  {isAdmin && (
-                    <div className="sidebar-group">
-                      <label className="sidebar-label">Professor</label>
-                      <select
-                        className="sidebar-select"
-                        value={filtroProfessorId || ''}
-                        onChange={(e) => setFiltroProfessorId(e.target.value ? Number(e.target.value) : null)}
-                      >
-                        <option value="">Todos</option>
-                        {professores.map(p => (
-                          <option key={p.id} value={p.id}>{p.nome}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+                <div className="sidebar-group sidebar-actions">
+                  <button onClick={handleDownloadExcel} className="btn-sidebar-action">
+                    📊 Excel
+                  </button>
+                  <button onClick={handleDownloadPDF} className="btn-sidebar-action">
+                    📄 PDF
+                  </button>
+                </div>
 
-                  <div className="sidebar-group sidebar-actions">
-                    <button onClick={handleDownloadExcel} className="btn-sidebar-action">
-                      📊 Excel
-                    </button>
-                    <button onClick={handleDownloadPDF} className="btn-sidebar-action">
-                      📄 PDF
-                    </button>
+                <div className="sidebar-stats">
+                  <div className="info-label">Carga Total</div>
+                  <div className="info-value">
+                    {professorSubjects
+                      .filter(ps => professores.some(p => p.id === ps.professor_id))
+                      .filter(ps => !isAdmin || !filtroProfessorId || ps.professor_id === filtroProfessorId)
+                      .reduce((acc, curr) => acc + curr.quantidade_aulas, 0)
+                    } Aulas
                   </div>
+                </div>
+              </aside>
 
-                  <div className="sidebar-stats">
-                    <div className="info-label">Carga Total</div>
-                    <div className="info-value">
-                      {professorSubjects
-                        .filter(ps => professores.some(p => p.id === ps.professor_id))
-                        .filter(ps => !isAdmin || !filtroProfessorId || ps.professor_id === filtroProfessorId)
-                        .reduce((acc, curr) => acc + curr.quantidade_aulas, 0)
-                      } Aulas
-                    </div>
+              <div className="dashboard-main">
+                {!selectedTurno ? (
+                  <div className="select-turno-prompt">
+                    <h3>Bem-vindo à Grade de Horários</h3>
+                    <p>Por favor, selecione um <strong>Turno</strong> no menu lateral para visualizar e editar os horários.</p>
                   </div>
-                </aside>
-
-                <div className="dashboard-main">
+                ) : (
                   <div className="grade-wrapper">
 
                     {/* Painel Superior de Disciplinas */}
@@ -1373,9 +1376,9 @@ export function ProfessorDashboard() {
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         )}
       </div>
