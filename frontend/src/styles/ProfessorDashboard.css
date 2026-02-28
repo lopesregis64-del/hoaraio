@@ -1227,6 +1227,8 @@ tr.day-start td {
   position: sticky;
   top: 10px;
   flex-shrink: 0;
+  height: 85vh;
+  /* Altura fixa igual à grade */
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -1239,7 +1241,8 @@ tr.day-start td {
   position: sticky;
   top: 10px;
   flex-shrink: 0;
-  max-height: 85vh;
+  height: 85vh;
+  /* Altura fixa igual à grade */
   display: flex;
   flex-direction: column;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -1296,6 +1299,14 @@ tr.day-start td {
 .dashboard-main {
   flex: 1;
   min-width: 0;
+}
+
+/* Ajuste de Largura Total (1px de cada lado) */
+.professor-dashboard:has(.dashboard-container) .prof-content {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
 }
 
 .professor-dashboard:has(.dashboard-container) .tab-content.dashboard-container {
