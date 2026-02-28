@@ -1256,9 +1256,9 @@ tr.day-start td {
 }
 
 .disciplinas-cards-container.vertical-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
   overflow-y: auto;
   padding-right: 5px;
   margin-top: 10px;
@@ -1268,10 +1268,15 @@ tr.day-start td {
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
-  padding: 8px;
+  padding: 6px;
   cursor: grab;
   transition: all 0.2s;
-  font-size: 11px;
+  font-size: 10px;
+  min-width: 0;
+  /* Evita que o grid quebre */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .card-subject {
