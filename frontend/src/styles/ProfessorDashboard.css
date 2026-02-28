@@ -1210,7 +1210,8 @@ tr.day-start td {
 .dashboard-layout {
   display: flex;
   gap: 15px;
-  align-items: flex-start;
+  align-items: stretch;
+  /* Garante que as sidebars estiquem */
   min-height: 85vh;
   justify-content: stretch;
 }
@@ -1306,19 +1307,34 @@ tr.day-start td {
 .dashboard-main {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.grade-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.grade-container-full {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Ajuste de Largura Total (1px de cada lado) */
 .professor-dashboard:has(.dashboard-container) .prof-content {
-  max-width: none;
-  padding: 0;
-  margin: 0;
-  width: 100%;
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
 }
 
 .professor-dashboard:has(.dashboard-container) .tab-content.dashboard-container {
-  width: calc(100% - 2px);
-  margin: 0 auto;
-  padding: 10px;
-  border-radius: 0;
+  width: calc(100% - 2px) !important;
+  max-width: none !important;
+  margin: 0 auto !important;
+  padding: 10px !important;
+  border-radius: 0 !important;
 }
