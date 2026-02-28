@@ -1169,46 +1169,6 @@ export function ProfessorDashboard() {
                 ) : (
                   <div className="grade-wrapper">
 
-                    {/* Painel Superior de Disciplinas */}
-                    <div className="disciplinas-top-panel">
-                      <div className="top-panel-header">
-                        <h3>Disciplinas Disponíveis</h3>
-                        <p className="hint">Arraste as aulas para a grade</p>
-                      </div>
-
-                      <div className="disciplinas-cards-container">
-                        {professorSubjects
-                          .filter(ps => professores.some(p => p.id === ps.professor_id))
-                          .filter(ps => !isAdmin || !filtroProfessorId || ps.professor_id === filtroProfessorId)
-                          .length === 0 ? (
-                          <p className="empty-msg">Nenhuma disciplina adicionada.</p>
-                        ) : (
-                          professorSubjects
-                            .filter(ps => professores.some(p => p.id === ps.professor_id))
-                            .filter(ps => !isAdmin || !filtroProfessorId || ps.professor_id === filtroProfessorId)
-                            .flatMap((ps) => {
-                              const numAlocadas = allocations.filter(a => Number(a.professor_subject_id) === Number(ps.id)).length;
-                              const numRestantes = ps.quantidade_aulas - numAlocadas;
-
-                              return Array.from({ length: Math.max(0, numRestantes) }).map((_, idx) => (
-                                <div
-                                  key={`${ps.id}-card-${idx}`}
-                                  className="disciplina-card-mini"
-                                  style={{ borderLeft: `4px solid ${SUBJECT_COLORS[ps.subject_id % SUBJECT_COLORS.length]}` }}
-                                  draggable
-                                  onDragStart={(e) => handleDragStart(e, ps)}
-                                >
-                                  <div className="card-subject">
-                                    {abreviarDisciplina(obterNomeDisciplina(ps.subject_id))}-{abreviarNome(professores.find(p => p.id === ps.professor_id)?.nome || '')}
-                                  </div>
-                                  <div className="card-class">{obterNomeTurma(ps.class_id)}</div>
-                                </div>
-                              ));
-                            })
-                        )}
-                      </div>
-                    </div>
-
                     <div className="grade-container-full">
                       <div className="table-scroll">
                         <table className="schedule-table">
@@ -1376,6 +1336,49 @@ export function ProfessorDashboard() {
                   </div>
                 )}
               </div>
+
+              {selectedTurno && (
+                <aside className="dashboard-disciplines-sidebar no-print">
+                  <div className="disciplinas-right-panel">
+                    <div className="top-panel-header">
+                      <h3>Disciplinas</h3>
+                      <p className="hint">Arraste para a grade</p>
+                    </div>
+
+                    <div className="disciplinas-cards-container vertical-list">
+                      {professorSubjects
+                        .filter(ps => professores.some(p => p.id === ps.professor_id))
+                        .filter(ps => !isAdmin || !filtroProfessorId || ps.professor_id === filtroProfessorId)
+                        .length === 0 ? (
+                        <p className="empty-msg">Nenhuma adicionada.</p>
+                      ) : (
+                        professorSubjects
+                          .filter(ps => professores.some(p => p.id === ps.professor_id))
+                          .filter(ps => !isAdmin || !filtroProfessorId || ps.professor_id === filtroProfessorId)
+                          .flatMap((ps) => {
+                            const numAlocadas = allocations.filter(a => Number(a.professor_subject_id) === Number(ps.id)).length;
+                            const numRestantes = ps.quantidade_aulas - numAlocadas;
+
+                            return Array.from({ length: Math.max(0, numRestantes) }).map((_, idx) => (
+                              <div
+                                key={`${ps.id}-card-r-${idx}`}
+                                className="disciplina-card-mini"
+                                style={{ borderLeft: `4px solid ${SUBJECT_COLORS[ps.subject_id % SUBJECT_COLORS.length]}` }}
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, ps)}
+                              >
+                                <div className="card-subject">
+                                  {abreviarDisciplina(obterNomeDisciplina(ps.subject_id))}-{abreviarNome(professores.find(p => p.id === ps.professor_id)?.nome || '')}
+                                </div>
+                                <div className="card-class">{obterNomeTurma(ps.class_id)}</div>
+                              </div>
+                            ));
+                          })
+                      )}
+                    </div>
+                  </div>
+                </aside>
+              )}
             </div>
           </div>
         )}

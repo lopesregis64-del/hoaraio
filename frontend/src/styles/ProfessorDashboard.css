@@ -1124,34 +1124,6 @@ tr.day-start td {
   }
 }
 
-/* Layout com Sidebar Lateral */
-.dashboard-layout {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  min-height: 70vh;
-}
-
-.dashboard-sidebar {
-  width: 220px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  position: sticky;
-  top: 20px;
-  flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.dashboard-main {
-  flex: 1;
-  min-width: 0;
-}
-
 .sidebar-group {
   display: flex;
   flex-direction: column;
@@ -1229,42 +1201,106 @@ tr.day-start td {
   border-color: #cbd5e1;
 }
 
-.btn-tiny {
-  background: none;
-  border: none;
-  color: #4f46e5;
-  font-size: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
-}
-
 .sidebar-stats {
   margin-top: auto;
   padding-top: 15px;
   border-top: 1px solid #e2e8f0;
 }
 
-.tab-header-flex {
+.dashboard-layout {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  gap: 15px;
+  align-items: flex-start;
+  min-height: 85vh;
+  justify-content: stretch;
 }
 
-/* Ajuste de Largura Total (1px de cada lado) */
-.professor-dashboard:has(.dashboard-container) .prof-content {
-  max-width: none;
-  padding: 0;
+.dashboard-sidebar {
+  width: 200px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  position: sticky;
+  top: 10px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-disciplines-sidebar {
+  width: 200px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 15px;
+  position: sticky;
+  top: 10px;
+  flex-shrink: 0;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.disciplinas-right-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.disciplinas-cards-container.vertical-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 5px;
+  margin-top: 10px;
+}
+
+.disciplina-card-mini {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px;
+  cursor: grab;
+  transition: all 0.2s;
+  font-size: 11px;
+}
+
+.card-subject {
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 2px;
+}
+
+.card-class {
+  color: #64748b;
+  font-size: 10px;
+}
+
+.top-panel-header h3 {
   margin: 0;
-  width: 100%;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.top-panel-header .hint {
+  font-size: 10px;
+  margin: 0;
+}
+
+.dashboard-main {
+  flex: 1;
+  min-width: 0;
 }
 
 .professor-dashboard:has(.dashboard-container) .tab-content.dashboard-container {
   width: calc(100% - 2px);
   margin: 0 auto;
   padding: 10px;
-  /* Um pouco de respiro interno ainda é bom, mas a largura externa é máxima */
   border-radius: 0;
 }
