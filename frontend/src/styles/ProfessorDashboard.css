@@ -1262,6 +1262,8 @@ tr.day-start td {
   overflow-y: auto;
   padding-right: 5px;
   margin-top: 10px;
+  flex: 1;
+  /* Faz a lista crescer para ocupar o espaço disponível na barra lateral */
 }
 
 .disciplina-card-mini {
