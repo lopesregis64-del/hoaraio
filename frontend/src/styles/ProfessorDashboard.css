@@ -453,14 +453,6 @@
   margin: 0;
 }
 
-.disciplinas-cards-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  max-height: 150px;
-  overflow-y: auto;
-  padding-bottom: 4px;
-}
 
 .disciplina-card-mini {
   background: #fff;
